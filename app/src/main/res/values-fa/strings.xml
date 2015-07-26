@@ -313,7 +313,7 @@
     <string name="pref_dlgmsg_recovery_code">کد کنونی شما: %s</string>
     <!-- Recovery intent chooser -->
     <string name="recovery_intent_tit">ارسال کد بازیابی</string>
-    <string name="recovery_intent_message">کد بازیابی برنامه قفل گذاری شما برابر %s میباشد. به منظور دسترسی دوباره به دستگاه و ریست کردن کلمه عبور،  شماره مقابل را شماره گیری نمایید: %s/string>
+    <string name="recovery_intent_message"/>کد بازیابی برنامه قفل گذاری شما برابر %s میباشد. به منظور دسترسی دوباره به دستگاه و ریست کردن کلمه عبور،  شماره مقابل را شماره گیری نمایید: %s/string>
     <!-- Da menu -->
     <string name="apps_menu_sort"> ردیف</string>
     <string name="apps_menu_lock_all">قفل همه</string>

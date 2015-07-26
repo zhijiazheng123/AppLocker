@@ -15,6 +15,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
@@ -22,6 +23,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
+import android.widget.FrameLayout;
 
 import com.twinone.locker.R;
 
@@ -36,11 +38,6 @@ public class MainActivity extends ActionBarActivity implements
 
 	private DialogSequencer mSequencer;
 	private Fragment mCurrentFragment;
-	/**
-	 * Fragment managing the behaviors, interactions and presentation of the
-	 * navigation drawer.
-	 */
-	private NavigationFragment mNavFragment;
 
 	/**
 	 * Used to store the last screen title. For use in
@@ -73,11 +70,6 @@ public class MainActivity extends ActionBarActivity implements
 		mFilter.addAction(AppLockService.BROADCAST_SERVICE_STARTED);
 		mFilter.addAction(AppLockService.BROADCAST_SERVICE_STOPPED);
 
-		mNavFragment = (NavigationFragment) getSupportFragmentManager()
-				.findFragmentById(R.id.navigation_drawer);
-		// Set up the drawer.
-		mNavFragment.setUp(R.id.navigation_drawer,
-				(DrawerLayout) findViewById(R.id.drawer_layout));
 		mTitle = getTitle();
 
 		mActionBar = getSupportActionBar();
@@ -197,8 +189,6 @@ public class MainActivity extends ActionBarActivity implements
 		Log.d("Main",
 				"UPDATE LAYOUT Setting service state: "
 						+ AppLockService.isRunning(this));
-		mNavFragment.getAdapter().setServiceState(
-				AppLockService.isRunning(this));
 	}
 
 	/**
@@ -247,8 +237,6 @@ public class MainActivity extends ActionBarActivity implements
 		} else {
 			newState = AppLockService.toggle(this);
 		}
-		if (mNavFragment != null)
-			mNavFragment.getAdapter().setServiceState(newState);
 	}
 
 	@Override
