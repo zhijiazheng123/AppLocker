@@ -13,11 +13,11 @@
     <string name="change_pass_tit">تغییر کلمه عبور</string>
 
     <string name="change_pass_desc">کلمه عبور جدید را وارد نمایید \n
-4 رقم یا بیشتر توصیه می شود</string> 
+4 رقم یا بیشتر توصیه می شود</string>
     <string name="change_pass_desc_confirmation">تایید کلمه عبور </string>
     <string name="change_pass_not_match">کلمات عبور همخوانی ندارند</string>
     <string name="change_pass_changed">کلمه عبور با موفقیت تغییر یافت </string>
-    <string name="change_pass_not_changed">ایراد تغییر کلمه عبور</string> 
+    <string name="change_pass_not_changed">ایراد تغییر کلمه عبور</string>
     <string name="change_pass_empty">ایراد: کلمه عبور خالی</string>
     <string name="select_tit">برنامه ها را جهت قفل کردن انتخاب نمایید </string>
 
@@ -75,7 +75,7 @@
     <!-- For android 4.2 and below, the system will not kill Locker -->
     <string name="pref_desc_show_notification"> نمایش یک اعلان زمانی که برنامه ها قفل شده اند </string>   <!-- Since Android 4.3, system kills app if it doesn't show a notification, we should warnt he users about this -->
     <string name="notification_title">برنامه قفل گذاری فعال است </string>
-    <string name="notification_state_locked">جهت غیر فعال کردن برنامه قفل گذاری اینجا را کلیک نمایید</string> 
+    <string name="notification_state_locked">جهت غیر فعال کردن برنامه قفل گذاری اینجا را کلیک نمایید</string>
     <!-- END v2.0 Strings -->
 
 
@@ -170,7 +170,7 @@
     <string name="main_state_not_running">در حال اجرا نمی باشد</string>
 
     <!-- More prefs -->
-    <string name="pref_tit_dial_launch">شروع با شماره گیری</string> 
+    <string name="pref_tit_dial_launch">شروع با شماره گیری</string>
     <string name="pref_desc_dial_launch">دسترسی به قفل با شماره گیری یک شماره خاص.</string>
     <string name="pref_tit_dial_launch_number"> شماره</string>
     <string name="pref_desc_dial_launch_number">شماره ای که شما باید جهت دسترسی به برنامه آن را بگیرید)(پیشنهاد می شود شماره باعلامت # شروع گردد) .</string>
@@ -238,7 +238,7 @@
     <!-- animations for the lock screen -->
     <string name="pref_tit_cat_anim_show">انیمیشن را وارد نمایید</string>
     <string name="pref_tit_cat_anim_hide">خروج از انیمیشن</string>
-    <string name="pref_tit_anim_millis">مدت زمان</string> 
+    <string name="pref_tit_anim_millis">مدت زمان</string>
     <string name="pref_desc_anim_millis">زمان بر حسب میای ثانیه برای انیمیشن</string>
     <string name="pref_tit_anim_type"> نوع</string>
     <string name="pref_desc_anim_type"></string>
@@ -255,7 +255,7 @@
     <string name="pro_ft_tit">ویژگی های حرفه ای :</string>
     <string name="pro_ft_bg">عکس پشت زمینه شخصی</string>
     <string name="pro_ft_hide">مخفی سازی برنامه قفل گذاری</string>
-    <string name="pro_ft_hide_notif">مخفی سازی اعلان</string> 
+    <string name="pro_ft_hide_notif">مخفی سازی اعلان</string>
     <string name="pro_ft_pcolor">تغییر رنگ الگو</string>
     <string name="pro_ft_short_exit">خروج کوتاه</string>
     <string name="pro_ft_anim">انیمیشن ها</string>
@@ -293,7 +293,7 @@
     <string name="fragment_title_settings"> تنظیمات</string>
     <string name="fragment_title_statistics"> آمار</string>
     <string name="fragment_title_pro">حرفه ای</string>
-    <string name="setup_new_lock">نصب قفل جدید</string> 
+    <string name="setup_new_lock">نصب قفل جدید</string>
     <!--  -->
     <string name="pref_tit_pattern_hide_error">مخفی سازی خطا</string>
     <string name="pref_desc_pattern_hide_error">عدم نمایش پیغام خطا هنگام ورود الگوی اشتباه</string>
@@ -301,7 +301,7 @@
     <string name="pref_desc_pattern_size">تعداد سطرها وستون های الگو</string>
     <!--  -->
     <string name="locker_invalid_password">کلمه عبور اشتباه</string>
-    <string name="locker_invalid_pattern">الگوی اشتباه</string> 
+    <string name="locker_invalid_pattern">الگوی اشتباه</string>
 
     <!-- Recovery dialog -->
     <string name="recovery_tit">کد بازیابی</string>
@@ -313,7 +313,8 @@
     <string name="pref_dlgmsg_recovery_code">کد کنونی شما: %s</string>
     <!-- Recovery intent chooser -->
     <string name="recovery_intent_tit">ارسال کد بازیابی</string>
-    <string name="recovery_intent_message">کد بازیابی برنامه قفل گذاری شما برابر %s میباشد. به منظور دسترسی دوباره به دستگاه و ریست کردن کلمه عبور،  شماره مقابل را شماره گیری نمایید: %s/string>
+    <!-- FIXME Only ONE %s-->
+    <!--<string name="recovery_intent_message">کد بازیابی برنامه قفل گذاری شما برابر %s میباشد. به منظور دسترسی دوباره به دستگاه و ریست کردن کلمه عبور،  شماره مقابل را شماره گیری نمایید: %s</string>-->
     <!-- Da menu -->
     <string name="apps_menu_sort"> ردیف</string>
     <string name="apps_menu_lock_all">قفل همه</string>
@@ -329,7 +330,7 @@
     <!-- BEGIN v2332 -->
     <string name="nav_b_share"> همرسانی</string>
     <string name="nav_b_rate">امتیاز دهی</string>
-    <string name="lib_share_dlg_tit">همرسانی برنامه</string> 
+    <string name="lib_share_dlg_tit">همرسانی برنامه</string>
     <string name="lib_share_dlg_msg">اگر برنامه را دوست داشتید آنرا با دوستان خود به اشتراک بگذارید.</string>
     <!-- May be used for twitter -->
     <string name="share_promo_text">سری به برنامه رایگان Twinone App Locker  که امنیت شما و برنامه های شما را تامین میکند بزنید. https://play.google.com/store/apps/details?id=com.twinone.locker</string>
