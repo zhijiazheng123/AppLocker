@@ -1,9 +1,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <group android:id="@+id/menu_group_1"
-        android:checkableBehavior="all">
+        android:checkableBehavior="single">
         <item
             android:id="@+id/menu_apps"
+            android:checked="true"
             android:title="@string/nav_apps" />
         <item
             android:id="@+id/menu_change"
@@ -11,19 +12,17 @@
         <item
             android:id="@+id/menu_settings"
             android:title="@string/nav_settings" />
-    </group>
-    <group android:id="@+id/menu_group_2"
-        android:checkableBehavior="all"
-        android:visible="false">
         <item
             android:id="@+id/menu_statistics"
+            android:visible="false"
             android:title="@string/nav_statistics" />
         <item
             android:id="@+id/menu_test"
+            android:visible="false"
             android:title="@string/nav_test" />
     </group>
     <group android:id="@+id/menu_group_3"
-        android:checkableBehavior="all">
+        android:checkableBehavior="single">
         <item
             android:id="@+id/menu_share"
             android:icon="@drawable/ic_action_share"

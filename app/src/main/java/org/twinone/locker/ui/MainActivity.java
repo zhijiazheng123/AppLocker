@@ -1,5 +1,6 @@
 package org.twinone.locker.ui;
 
+import org.twinone.locker.Constants;
 import org.twinone.locker.lock.AppLockService;
 import org.twinone.locker.lock.LockService;
 import org.twinone.locker.util.PrefUtils;
@@ -79,7 +80,7 @@ public class MainActivity extends ActionBarActivity {
 
 		mTitle = getTitle();
 
-        initNavigationView();
+        setupDrawer();
         mActionBar = getSupportActionBar();
 		mCurrentFragment = new AppsFragment();
 		getSupportFragmentManager().beginTransaction()
@@ -92,7 +93,7 @@ public class MainActivity extends ActionBarActivity {
 
 	}
 
-    protected void initNavigationView() {
+    protected void setupDrawer() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setNavigationIcon(R.drawable.ic_drawer);
@@ -116,7 +117,7 @@ public class MainActivity extends ActionBarActivity {
                 MainActivity.this.onDrawerOpened();
             }
         });
-        NavigationView navigationView = (NavigationView) findViewById(R.id.vNavigation);
+        final NavigationView navigationView = (NavigationView) findViewById(R.id.vNavigation);
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(MenuItem menuItem) {
@@ -124,15 +125,18 @@ public class MainActivity extends ActionBarActivity {
                 switch (menuItem.getItemId()) {
                     case R.id.menu_apps:
                         navigateToFragment(NavigationElement.TYPE_APPS);
+                        menuItem.setChecked(true);
                         return true;
                     case R.id.menu_change:
                         navigateToFragment(NavigationElement.TYPE_CHANGE);
                         return true;
                     case R.id.menu_settings:
                         navigateToFragment(NavigationElement.TYPE_SETTINGS);
+                        menuItem.setChecked(true);
                         return true;
                     case R.id.menu_statistics:
                         navigateToFragment(NavigationElement.TYPE_STATISTICS);
+                        menuItem.setChecked(true);
                         return true;
                     case R.id.menu_test:
                         onNavigationElementSelected(NavigationElement.TYPE_TEST);
@@ -148,6 +152,11 @@ public class MainActivity extends ActionBarActivity {
                 }
             }
         });
+        if (Constants.DEBUG) {
+            navigationView.getMenu().findItem(R.id.menu_statistics).setVisible(true);
+            navigationView.getMenu().findItem(R.id.menu_test).setVisible(true);
+        }
+
         final View.OnClickListener statusClickedListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
