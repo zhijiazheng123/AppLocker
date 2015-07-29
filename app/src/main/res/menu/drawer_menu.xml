@@ -1,0 +1,35 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <group android:id="@+id/menu_group_1"
+        android:checkableBehavior="single">
+        <item
+            android:id="@+id/menu_apps"
+            android:checked="true"
+            android:title="@string/nav_apps" />
+        <item
+            android:id="@+id/menu_change"
+            android:title="@string/nav_change" />
+        <item
+            android:id="@+id/menu_settings"
+            android:title="@string/nav_settings" />
+        <item
+            android:id="@+id/menu_statistics"
+            android:visible="false"
+            android:title="@string/nav_statistics" />
+        <item
+            android:id="@+id/menu_test"
+            android:visible="false"
+            android:title="@string/nav_test" />
+    </group>
+    <group android:id="@+id/menu_group_3"
+        android:checkableBehavior="single">
+        <item
+            android:id="@+id/menu_share"
+            android:icon="@drawable/ic_action_share"
+            android:title="@string/nav_b_share" />
+        <item
+            android:id="@+id/menu_rate"
+            android:icon="@drawable/ic_action_important"
+            android:title="@string/nav_b_rate" />
+    </group>
+</menu>
