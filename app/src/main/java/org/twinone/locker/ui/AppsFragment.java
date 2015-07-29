@@ -7,6 +7,7 @@ import org.twinone.locker.appselect.AppAdapter.OnEventListener;
 import android.app.SearchManager;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.SearchView;
@@ -39,16 +40,12 @@ public class AppsFragment extends Fragment implements OnItemClickListener,
 		mListView.setAdapter(mAdapter);
 		mListView.setOnItemClickListener(this);
 
-		// mUndoBar = (LinearLayout) rootView.findViewById(R.id.undo_bar);
-		// mUndoButton = (Button) rootView.findViewById(R.id.undo_bar_button);
-		// mUndoButton.setOnClickListener(this);
-
 		setHasOptionsMenu(true);
 		getActivity().setTitle(R.string.fragment_title_apps);
 		return mListView;
 	}
 
-	private Toast mLockedToast;
+	private Snackbar mSnack;
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position,
@@ -67,17 +64,25 @@ public class AppsFragment extends Fragment implements OnItemClickListener,
 	}
 
 	private void showToast(String text) {
-		if (mLockedToast != null) {
-			mLockedToast.cancel();
+		if (mSnack != null) {
+			mSnack.dismiss();
 		}
 
-		mLockedToast = Toast.makeText(getActivity(), text, Toast.LENGTH_SHORT);
-		mLockedToast.show();
+		mSnack = Snackbar.make(getView(), text, Snackbar.LENGTH_LONG);
+        mSnack.setAction(R.string.undo, new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mAdapter.undo();
+                mSnack.dismiss();
+            }
+        });
+		mSnack.show();
 	}
 
 	private void showToastSingle(boolean locked, String title) {
-		showToast(getString(locked ? R.string.apps_toast_locked_single
-				: R.string.apps_toast_unlocked_single, title));
+		// Not anymore
+//		showToast(getString(locked ? R.string.apps_toast_locked_single
+//				: R.string.apps_toast_unlocked_single, title));
 	}
 
 	private void showToastAll(boolean locked) {

@@ -36,6 +36,6 @@ android {
 
 dependencies {
     compile 'com.google.code.gson:gson:2.3'
-    compile 'com.android.support:design:+'
+    compile 'com.android.support:design:22.2.1'
     googleCompile 'com.google.android.gms:play-services:+'
 }

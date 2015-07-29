@@ -349,4 +349,9 @@
     <!--  -->
     <string name="lib_share_never">No thanks</string>
     <string name="lib_share_later">Later</string>
+    <string name="undo">Undo</string>
+
+    <string name="main_nav_locked">AppLocker is running</string>
+    <string name="main_nav_unlocked">AppLocker is not running</string>
+
 </resources>
