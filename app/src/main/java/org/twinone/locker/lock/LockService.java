@@ -43,7 +43,6 @@ import org.twinone.locker.lock.PatternView.DisplayMode;
 import org.twinone.locker.lock.PatternView.OnPatternListener;
 import org.twinone.locker.util.PrefUtils;
 import org.twinone.locker.util.Util;
-import org.twinone.util.Analytics;
 
 import java.io.FileNotFoundException;
 
@@ -108,7 +107,6 @@ public class LockService extends Service implements View.OnClickListener,
     // private AdViewManager mAdViewManager;
     // private AppLockService mAppLockService;
     private AppLockService mAppLockService;
-    private Analytics mAnalytics;
     private Animation mAnimHide;
     private Animation mAnimShow;
     private ImageView mAppIcon;
@@ -328,8 +326,6 @@ public class LockService extends Service implements View.OnClickListener,
     @Override
     public void onCreate() {
         super.onCreate();
-        mAnalytics = new Analytics(this);
-
     }
 
     ;

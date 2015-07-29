@@ -121,6 +121,7 @@ public class MainActivity extends AppCompatActivity implements
 
         mNavView = (NavigationView) findViewById(R.id.navView);
         mNavView.setNavigationItemSelectedListener(this);
+        // TODO Add lock/unlock to header view so we can remove the dismissable info message
         mLockStateImage = (ImageView) mNavView.findViewById(R.id.lock_state_image);
         mLockStateDesc = (TextView) mNavView.findViewById(R.id.lock_state_desc);
 

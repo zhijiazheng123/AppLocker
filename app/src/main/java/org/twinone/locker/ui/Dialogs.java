@@ -12,7 +12,6 @@ import android.widget.EditText;
 import com.twinone.locker.R;
 
 import org.twinone.locker.util.PrefUtils;
-import org.twinone.util.Analytics;
 
 
 class Dialogs {
@@ -80,7 +79,6 @@ class Dialogs {
                 intent.putExtra(Intent.EXTRA_TEXT, text);
                 Intent sender = Intent.createChooser(intent,
                         c.getString(R.string.lib_share_dlg_tit));
-                Analytics anal = new Analytics(c);
                 c.startActivity(sender);
                 // At this point, we can assume the user will share the app.
                 // So never show the dialog again, he can manually open it from
