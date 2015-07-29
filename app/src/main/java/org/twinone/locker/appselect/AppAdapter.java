@@ -33,21 +33,18 @@ import java.util.Set;
 
 public class AppAdapter extends BaseAdapter {
 
+    private final LayoutInflater mInflater;
+    private final PackageManager mPm;
+    private final Context mContext;
+    private final Editor mEditor;
     private boolean mLoadComplete;
-
     private OnEventListener mListener;
-
     /**
      * Saves the packagenames of apps that are locked
      */
     private ArrayList<String> mSavedState;
-
-    private final LayoutInflater mInflater;
-    private final PackageManager mPm;
-    private final Context mContext;
     private List<AppListElement> mItems;
     private List<AppListElement> mSavedItems;
-    private final Editor mEditor;
     private boolean mDirtyState;
 
 
@@ -64,38 +61,12 @@ public class AppAdapter extends BaseAdapter {
         new LoaderClass().execute((Void[]) null);
     }
 
-    private class LoaderClass extends AsyncTask<Void, Void, Void> {
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            loadAppsIntoList();
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            sort();
-            if (mListener != null) {
-                mLoadComplete = true;
-                mListener.onLoadComplete();
-            }
-        }
-
-    }
-
-
     public boolean isLoadComplete() {
         return mLoadComplete;
     }
 
     public void setOnEventListener(OnEventListener listener) {
         mListener = listener;
-    }
-
-    public interface OnEventListener {
-        void onLoadComplete();
-
-        void onDirtyStateChanged(boolean dirty);
     }
 
     public boolean areAllAppsLocked() {
@@ -311,7 +282,6 @@ public class AppAdapter extends BaseAdapter {
         save();
     }
 
-
     private void notifyDirtyStateChanged() {
         List<AppListElement> list = new ArrayList<>(mItems);
         Collections.sort(list);
@@ -363,6 +333,31 @@ public class AppAdapter extends BaseAdapter {
             v.setBackgroundDrawable(bg);
         else
             v.setBackground(bg);
+    }
+
+    public interface OnEventListener {
+        void onLoadComplete();
+
+        void onDirtyStateChanged(boolean dirty);
+    }
+
+    private class LoaderClass extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            loadAppsIntoList();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            sort();
+            if (mListener != null) {
+                mLoadComplete = true;
+                mListener.onLoadComplete();
+            }
+        }
+
     }
 
 }

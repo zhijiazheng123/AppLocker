@@ -9,11 +9,12 @@
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
         android:src="@drawable/nav_bg" />
+
     <ImageView
         android:id="@+id/lock_state_image"
         android:layout_width="70dp"
-        android:layout_centerInParent="true"
         android:layout_height="70dp"
+        android:layout_centerInParent="true"
         android:scaleType="centerCrop"
         android:src="@drawable/lock_open_hole" />
 
@@ -24,10 +25,10 @@
         android:layout_above="@+id/lock_state_desc"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:gravity="start"
-        android:paddingBottom="4dp"
         android:layout_marginLeft="16dp"
         android:layout_marginStart="16dp"
+        android:gravity="start"
+        android:paddingBottom="4dp"
         android:text="AppLocker"
         android:textColor="#FFF"
         android:textSize="14sp"
@@ -40,9 +41,9 @@
         android:layout_alignLeft="@id/username"
         android:layout_alignParentBottom="true"
         android:layout_alignStart="@id/username"
+        android:layout_marginBottom="8dp"
         android:gravity="start"
         android:textColor="#fff"
-        android:layout_marginBottom="8dp"
         android:textSize="14sp" />
 
     <TextView
@@ -50,14 +51,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@id/username"
-        android:layout_marginTop="30dp"
         android:layout_alignParentTop="true"
         android:layout_alignStart="@id/username"
+        android:layout_marginTop="30dp"
         android:gravity="start"
         android:text="@string/main_nav_onetime_info"
         android:textColor="#fff"
         android:textSize="12sp" />
-
 
 
 </RelativeLayout>

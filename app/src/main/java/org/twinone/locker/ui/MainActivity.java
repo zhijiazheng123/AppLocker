@@ -102,13 +102,6 @@ public class MainActivity extends AppCompatActivity implements
         getPreferences(MODE_PRIVATE).edit().putBoolean("main_nav_info_onetime_learned", true).apply();
     }
 
-    private class ServiceStateReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            updateLayout();
-        }
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -201,7 +194,6 @@ public class MainActivity extends AppCompatActivity implements
         return true;
     }
 
-
     private void showLockerIfNotUnlocked(boolean relock) {
         boolean unlocked = getIntent().getBooleanExtra(EXTRA_UNLOCKED, false);
         if (new PrefUtils(this).isCurrentPasswordEmpty()) {
@@ -259,7 +251,7 @@ public class MainActivity extends AppCompatActivity implements
             return true;
         try {
             throw new RuntimeException("");
-        } catch(Exception e) {
+        } catch (Exception e) {
             Log.d("ShowPass", "from setup: ", e);
         }
 
@@ -267,13 +259,19 @@ public class MainActivity extends AppCompatActivity implements
         return false;
     }
 
-
     private void toGooglePlay() {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse("market://details?id=" + getPackageName()));
         if (getPackageManager().queryIntentActivities(intent,
                 PackageManager.MATCH_DEFAULT_ONLY).size() >= 1) {
             startActivity(intent);
+        }
+    }
+
+    private class ServiceStateReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            updateLayout();
         }
     }
 }

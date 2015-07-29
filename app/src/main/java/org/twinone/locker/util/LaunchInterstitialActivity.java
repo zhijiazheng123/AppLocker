@@ -6,10 +6,12 @@ import android.view.View;
 
 import com.twinone.locker.R;
 
-import org.twinone.ads.InterstitialHelper;
 import org.twinone.ads.DefaultAdInterface;
+import org.twinone.ads.InterstitialHelper;
 
 public class LaunchInterstitialActivity extends Activity {
+
+    boolean mCreated;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -22,7 +24,6 @@ public class LaunchInterstitialActivity extends Activity {
         helper.load();
     }
 
-    boolean mCreated;
     @Override
     protected void onResume() {
         super.onResume();

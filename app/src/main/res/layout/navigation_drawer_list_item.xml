@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:paddingLeft="16dp"
-    android:paddingRight="16dp" >
+    android:paddingRight="16dp">
 
     <CheckBox
         android:id="@id/navFlag"
@@ -14,8 +14,7 @@
         android:layout_centerVertical="true"
         android:clickable="false"
         android:focusable="false"
-        android:visibility="gone" >
-    </CheckBox>
+        android:visibility="gone"></CheckBox>
 
     <TextView
         android:id="@id/navTitle"

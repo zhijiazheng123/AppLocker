@@ -84,7 +84,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-        <activity android:name="org.twinone.locker.util.LaunchInterstitialActivity"/>
+        <activity android:name="org.twinone.locker.util.LaunchInterstitialActivity" />
 
         <!-- Admob -->
         <activity

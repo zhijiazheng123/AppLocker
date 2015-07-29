@@ -34,8 +34,10 @@
 
     <!-- BEGIN v1.08 Strings -->
     <!-- This section represents Locker > Preferences -->
-    <string name="preferences_tit">Preferències</string> <!-- The window title -->
-    <string name="main_preferences">Preferències</string> <!-- The button in the main screen -->
+    <string name="preferences_tit">Preferències</string>
+    <!-- The window title -->
+    <string name="main_preferences">Preferències</string>
+    <!-- The button in the main screen -->
     <!-- clone of "locker_footer_default" -->
     <string name="pref_def_lock_message">Introduïu la contrasenya per a desbloquejar</string>
     <string name="pref_tit_lock_message">Missatge</string>
@@ -175,7 +177,8 @@
     <string name="pref_desc_dial_launch">Accedeix a Locker trucant a un número.</string>
     <string name="pref_tit_dial_launch_number">Número</string>
     <string name="pref_desc_dial_launch_number">En trucar a aquest número, Locker s\'obrirà. (Recomanem que comenci per #)</string>
-    <string name="vc_later">Més tard</string> <!-- END v2.0.8 Strings -->
+    <string name="vc_later">Més tard</string>
+    <!-- END v2.0.8 Strings -->
 
 
     <!-- END v2.0.8 Strings -->

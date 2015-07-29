@@ -69,11 +69,28 @@ public class VersionManager {
      * This indicates the old version for #isJustUpdated()
      */
     private static final String PREFS_OLD_VERSION = "com.twinone.update.values.old_version";
-
+    /**
+     * This app is marked for deprecation and the server time >= deprecation
+     * time
+     */
+    private static final int STATUS_DEPRECATED = -1;
+    /**
+     * This version has been marked for deprecation but there is still time left
+     * to use this version
+     */
+    private static final int STATUS_MARKED_FOR_DEPRECATION = -2;
+    /**
+     * This version is not marked for deprecation
+     */
+    private static final int STATUS_NOT_DEPRECATED = -3;
     private final Context mContext;
 
     public VersionManager(Context c) {
         mContext = c;
+    }
+
+    public static String getUniqueDeviceId() {
+        return Settings.Secure.ANDROID_ID;
     }
 
     /**
@@ -90,10 +107,6 @@ public class VersionManager {
         } catch (NameNotFoundException e) {
         }
         return ver;
-    }
-
-    public static interface VersionListener {
-        public void onServerResponse();
     }
 
     public void queryServer() {
@@ -164,31 +177,6 @@ public class VersionManager {
     private int getPrefsVersion() {
         return mContext.getSharedPreferences(PREFS_FILENAME,
                 Context.MODE_PRIVATE).getInt(PREFS_VERSION_MATCHED, 0);
-    }
-
-    private class LoadVersionsTask extends AsyncTask<Uri, Void, VersionInfo> {
-
-        private final VersionListener mListener;
-
-        public LoadVersionsTask(VersionListener listener) {
-            mListener = listener;
-        }
-
-        @Override
-        protected VersionInfo doInBackground(Uri... params) {
-            final Uri url = params[0];
-            return queryServerImpl(url);
-        }
-
-        @Override
-        protected void onPostExecute(VersionInfo result) {
-            if (result != null) {
-                saveToStorage(result);
-                if (mListener != null) {
-                    mListener.onServerResponse();
-                }
-            }
-        }
     }
 
     @SuppressLint("CommitPrefEdits")
@@ -301,21 +289,6 @@ public class VersionManager {
     }
 
     /**
-     * This app is marked for deprecation and the server time >= deprecation
-     * time
-     */
-    private static final int STATUS_DEPRECATED = -1;
-    /**
-     * This version has been marked for deprecation but there is still time left
-     * to use this version
-     */
-    private static final int STATUS_MARKED_FOR_DEPRECATION = -2;
-    /**
-     * This version is not marked for deprecation
-     */
-    private static final int STATUS_NOT_DEPRECATED = -3;
-
-    /**
      * Returns one of {@link #STATUS_DEPRECATED},
      * {@link #STATUS_MARKED_FOR_DEPRECATION} or {@link #STATUS_NOT_DEPRECATED}
      */
@@ -396,7 +369,32 @@ public class VersionManager {
         return storedVersion != manifestVersion;
     }
 
-    public static String getUniqueDeviceId() {
-        return Settings.Secure.ANDROID_ID;
+    public static interface VersionListener {
+        public void onServerResponse();
+    }
+
+    private class LoadVersionsTask extends AsyncTask<Uri, Void, VersionInfo> {
+
+        private final VersionListener mListener;
+
+        public LoadVersionsTask(VersionListener listener) {
+            mListener = listener;
+        }
+
+        @Override
+        protected VersionInfo doInBackground(Uri... params) {
+            final Uri url = params[0];
+            return queryServerImpl(url);
+        }
+
+        @Override
+        protected void onPostExecute(VersionInfo result) {
+            if (result != null) {
+                saveToStorage(result);
+                if (mListener != null) {
+                    mListener.onServerResponse();
+                }
+            }
+        }
     }
 }

@@ -11,43 +11,25 @@ import android.graphics.drawable.Drawable;
  */
 public class AppListElement implements Comparable<AppListElement> {
 
-    public String title;
-    // null if not an activity
-    private final PackageItemInfo pii;
-    // null if not an activity
-    public final String packageName;
-    private Drawable mIcon;
-    public boolean locked = true;
-
-
-    /**
-     * Indicates the priority of this item. The higher the priority, the higher
-     * it will appear in the list
-     */
-    private final int priority;
     public static final int PRIORITY_IMPORTANT_CATEGORY = 7;
     public static final int PRIORITY_IMPORTANT_APPS = 6;
     public static final int PRIORITY_SYSTEM_CATEGORY = 5;
     public static final int PRIORITY_SYSTEM_APPS = 4;
     public static final int PRIORITY_NORMAL_CATEGORY = 3;
     public static final int PRIORITY_NORMAL_APPS = 1;
+    // null if not an activity
+    public final String packageName;
+    // null if not an activity
+    private final PackageItemInfo pii;
+    /**
+     * Indicates the priority of this item. The higher the priority, the higher
+     * it will appear in the list
+     */
+    private final int priority;
+    public String title;
+    public boolean locked = true;
+    private Drawable mIcon;
 
-
-    public Drawable getIcon(PackageManager pm) {
-        if (mIcon == null) {
-            if (pii == null)
-                return null;
-            mIcon = pii.loadIcon(pm);
-        }
-        return mIcon;
-    }
-
-    public String getLabel(PackageManager pm) {
-        if (title == null) {
-            title = (String) pii.loadLabel(pm);
-        }
-        return title;
-    }
 
     public AppListElement(String label, PackageItemInfo pii, int priority) {
         this.title = label;
@@ -76,6 +58,22 @@ public class AppListElement implements Comparable<AppListElement> {
         this.packageName = packageName;
         this.priority = priority;
 
+    }
+
+    public Drawable getIcon(PackageManager pm) {
+        if (mIcon == null) {
+            if (pii == null)
+                return null;
+            mIcon = pii.loadIcon(pm);
+        }
+        return mIcon;
+    }
+
+    public String getLabel(PackageManager pm) {
+        if (title == null) {
+            title = (String) pii.loadLabel(pm);
+        }
+        return title;
     }
 
     public boolean isApp() {

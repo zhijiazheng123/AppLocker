@@ -53,9 +53,8 @@ public class AppLockService extends Service {
      * state of the service, such as when it is started or stopped
      */
     public static final String CATEGORY_STATE_EVENTS = "com.twinone.locker.intent.category.service_start_stop_event";
-
-    private static final int REQUEST_CODE = 0x1234AF;
     public static final int NOTIFICATION_ID = 0xABCD32;
+    private static final int REQUEST_CODE = 0x1234AF;
     private static final String TAG = "AppLockService";
 
     /**
@@ -75,63 +74,136 @@ public class AppLockService extends Service {
     private static final String ACTION_RESTART = "com.twinone.locker.intent.action.restart_lock_service";
 
     private static final String EXTRA_FORCE_RESTART = "com.twinone.locker.intent.extra.force_restart";
-    private ActivityManager mActivityManager;
+    private static PendingIntent running_intent;
 
 //    private AdMobInterstitialHelper mInterstitialHelper;
-
+    List<RunningTaskInfo> mTestList = new ArrayList<>();
+    private ActivityManager mActivityManager;
     /**
      * 0 for disabled
      */
     private long mShortExitMillis;
-
     private boolean mRelockScreenOff;
     private boolean mShowNotification;
-
     private boolean mExplicitStarted;
     private boolean mAllowDestroy;
     private boolean mAllowRestart;
     private Handler mHandler;
     private BroadcastReceiver mScreenReceiver;
-
     /**
      * This map contains locked apps in the form<br>
      * <PackageName, ShortExitEndTime>
      */
     private Map<String, Boolean> mLockedPackages;
     private Map<String, Runnable> mUnlockMap;
+    private String mLastPackageName;
+
+    ;
+    private int mAdCount = 0;
+
+    public static void start(Context c) {
+        startAlarm(c);
+    }
+
+    /**
+     * @param c
+     * @return The new state for the service, true for running, false for not
+     * running
+     */
+    public static boolean toggle(Context c) {
+        if (isRunning(c)) {
+            stop(c);
+            return false;
+        } else {
+            start(c);
+            return true;
+        }
+
+    }
+
+    public static boolean isRunning(Context c) {
+        ActivityManager manager = (ActivityManager) c
+                .getSystemService(Context.ACTIVITY_SERVICE);
+        for (RunningServiceInfo service : manager
+                .getRunningServices(Integer.MAX_VALUE)) {
+            if (AppLockService.class.getName().equals(
+                    service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // private String mLastCompleteName;
+
+    /**
+     * Starts the service
+     */
+    private static void startAlarm(Context c) {
+        AlarmManager am = (AlarmManager) c.getSystemService(ALARM_SERVICE);
+        PendingIntent pi = getRunIntent(c);
+        SharedPreferences sp = PrefUtils.prefs(c);
+        String defaultPerformance = c.getString(R.string.pref_val_perf_normal);
+        String s = sp.getString(c.getString(R.string.pref_key_performance),
+                defaultPerformance);
+        if (s.length() == 0)
+            s = "0";
+        long interval = Long.parseLong(s);
+        Log.d(TAG, "Scheduling alarm (interval=" + interval + ")");
+        long startTime = SystemClock.elapsedRealtime();
+        am.setRepeating(AlarmManager.ELAPSED_REALTIME, startTime, interval, pi);
+    }
+
+    private static PendingIntent getRunIntent(Context c) {
+        if (running_intent == null) {
+            Intent i = new Intent(c, AppLockService.class);
+            i.setAction(ACTION_START);
+            running_intent = PendingIntent.getService(c, REQUEST_CODE, i, 0);
+        }
+        return running_intent;
+    }
+
+    private static void stopAlarm(Context c) {
+        AlarmManager am = (AlarmManager) c.getSystemService(ALARM_SERVICE);
+        am.cancel(getRunIntent(c));
+    }
+
+    /**
+     * Stop this service, also stopping the alarm
+     */
+    public static void stop(Context c) {
+        stopAlarm(c);
+        Intent i = new Intent(c, AppLockService.class);
+        i.setAction(ACTION_STOP);
+        c.startService(i);
+    }
+
+    /**
+     * Re-initialize everything.<br>
+     * This has only effect if the service was explicitly started using
+     * {@link #start(Context)}
+     */
+    public static void restart(Context c) {
+        Intent i = new Intent(c, AppLockService.class);
+        i.setAction(ACTION_RESTART);
+        c.startService(i);
+    }
+
+    /**
+     * Forces the service to stop and then start again. This means that if the
+     * service was already stopped, it will just start
+     */
+    public static void forceRestart(Context c) {
+        Intent i = new Intent(c, AppLockService.class);
+        i.setAction(ACTION_RESTART);
+        i.putExtra(EXTRA_FORCE_RESTART, true);
+        c.startService(i);
+    }
 
     @Override
     public IBinder onBind(Intent i) {
         return new LocalBinder();
     }
-
-    public class LocalBinder extends Binder {
-        public AppLockService getInstance() {
-            return AppLockService.this;
-        }
-    }
-
-    private final class ScreenReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
-                Log.i(TAG, "Screen ON");
-                // Trigger package again
-                mLastPackageName = "";
-                startAlarm(AppLockService.this);
-            }
-            if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-                Log.i(TAG, "Screen OFF");
-                stopAlarm(AppLockService.this);
-                if (mRelockScreenOff) {
-                    lockAll();
-                }
-            }
-        }
-    }
-
-    ;
 
     @Override
     public void onCreate() {
@@ -230,10 +302,6 @@ public class AppLockService extends Service {
         return START_STICKY;
     }
 
-    private String mLastPackageName;
-
-    // private String mLastCompleteName;
-
     private void checkPackageChanged() {
         final String packageName = getTopPackageName();
         // final String completeName = packageName + "/"
@@ -315,8 +383,6 @@ public class AppLockService extends Service {
         LockService.hide(this);
     }
 
-    private int mAdCount = 0;
-
     private void setRelockTimer(String packageName) {
         boolean locked = mLockedPackages.get(packageName);
         if (!locked) {
@@ -338,25 +404,6 @@ public class AppLockService extends Service {
             mUnlockMap.remove(packageName);
         }
     }
-
-    /**
-     * This class will re-lock an app
-     */
-    private class RelockRunnable implements Runnable {
-        private final String mPackageName;
-
-        public RelockRunnable(String packageName) {
-            mPackageName = packageName;
-        }
-
-        @Override
-        public void run() {
-            lockApp(mPackageName);
-        }
-    }
-
-    List<RunningTaskInfo> mTestList = new ArrayList<>();
-
 
     private String getTopPackageName() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
@@ -435,105 +482,6 @@ public class AppLockService extends Service {
         startForeground(NOTIFICATION_ID, nb.build());
     }
 
-    public static void start(Context c) {
-        startAlarm(c);
-    }
-
-    /**
-     * @param c
-     * @return The new state for the service, true for running, false for not
-     * running
-     */
-    public static boolean toggle(Context c) {
-        if (isRunning(c)) {
-            stop(c);
-            return false;
-        } else {
-            start(c);
-            return true;
-        }
-
-    }
-
-    public static boolean isRunning(Context c) {
-        ActivityManager manager = (ActivityManager) c
-                .getSystemService(Context.ACTIVITY_SERVICE);
-        for (RunningServiceInfo service : manager
-                .getRunningServices(Integer.MAX_VALUE)) {
-            if (AppLockService.class.getName().equals(
-                    service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Starts the service
-     */
-    private static void startAlarm(Context c) {
-        AlarmManager am = (AlarmManager) c.getSystemService(ALARM_SERVICE);
-        PendingIntent pi = getRunIntent(c);
-        SharedPreferences sp = PrefUtils.prefs(c);
-        String defaultPerformance = c.getString(R.string.pref_val_perf_normal);
-        String s = sp.getString(c.getString(R.string.pref_key_performance),
-                defaultPerformance);
-        if (s.length() == 0)
-            s = "0";
-        long interval = Long.parseLong(s);
-        Log.d(TAG, "Scheduling alarm (interval=" + interval + ")");
-        long startTime = SystemClock.elapsedRealtime();
-        am.setRepeating(AlarmManager.ELAPSED_REALTIME, startTime, interval, pi);
-    }
-
-    private static PendingIntent running_intent;
-
-    private static PendingIntent getRunIntent(Context c) {
-        if (running_intent == null) {
-            Intent i = new Intent(c, AppLockService.class);
-            i.setAction(ACTION_START);
-            running_intent = PendingIntent.getService(c, REQUEST_CODE, i, 0);
-        }
-        return running_intent;
-    }
-
-    private static void stopAlarm(Context c) {
-        AlarmManager am = (AlarmManager) c.getSystemService(ALARM_SERVICE);
-        am.cancel(getRunIntent(c));
-    }
-
-    /**
-     * Stop this service, also stopping the alarm
-     */
-    public static void stop(Context c) {
-        stopAlarm(c);
-        Intent i = new Intent(c, AppLockService.class);
-        i.setAction(ACTION_STOP);
-        c.startService(i);
-    }
-
-    /**
-     * Re-initialize everything.<br>
-     * This has only effect if the service was explicitly started using
-     * {@link #start(Context)}
-     */
-    public static void restart(Context c) {
-        Intent i = new Intent(c, AppLockService.class);
-        i.setAction(ACTION_RESTART);
-        c.startService(i);
-    }
-
-    /**
-     * Forces the service to stop and then start again. This means that if the
-     * service was already stopped, it will just start
-     */
-    public static void forceRestart(Context c) {
-        Intent i = new Intent(c, AppLockService.class);
-        i.setAction(ACTION_RESTART);
-        i.putExtra(EXTRA_FORCE_RESTART, true);
-        c.startService(i);
-    }
-
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -573,6 +521,48 @@ public class AppLockService extends Service {
         Log.d(TAG, "Setting allowrestart to true");
         mAllowRestart = true;
         stopSelf();
+    }
+
+    public class LocalBinder extends Binder {
+        public AppLockService getInstance() {
+            return AppLockService.this;
+        }
+    }
+
+    private final class ScreenReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
+                Log.i(TAG, "Screen ON");
+                // Trigger package again
+                mLastPackageName = "";
+                startAlarm(AppLockService.this);
+            }
+            if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
+                Log.i(TAG, "Screen OFF");
+                stopAlarm(AppLockService.this);
+                if (mRelockScreenOff) {
+                    lockAll();
+                }
+            }
+        }
+    }
+
+    /**
+     * This class will re-lock an app
+     */
+    private class RelockRunnable implements Runnable {
+        private final String mPackageName;
+
+        public RelockRunnable(String packageName) {
+            mPackageName = packageName;
+        }
+
+        @Override
+        public void run() {
+            lockApp(mPackageName);
+        }
     }
 
 }

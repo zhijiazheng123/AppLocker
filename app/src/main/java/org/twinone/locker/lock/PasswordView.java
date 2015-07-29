@@ -1,7 +1,5 @@
 package org.twinone.locker.lock;
 
-import org.twinone.locker.util.Util;
-
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
@@ -17,69 +15,67 @@ import android.widget.ImageButton;
 
 import com.twinone.locker.R;
 
+import org.twinone.locker.util.Util;
+
 public class PasswordView extends ViewGroup implements OnClickListener,
-		OnLongClickListener {
+        OnLongClickListener {
 
-	private static final String TAG = "NumberLockView";
-	/** The current numbers that the user has input */
-	private String mPassword = "";
+    private static final String TAG = "NumberLockView";
+    private final int mOkImageResource = R.drawable.ic_action_accept;
+    private final int mBackImageResource = R.drawable.ic_action_cancel;
+    /**
+     * The current numbers that the user has input
+     */
+    private String mPassword = "";
+    private Button[] mButtons;
+    /**
+     * The default is left for back, right for OK
+     */
+    // private boolean mSwapActionButtons = false;
 
-	private Button[] mButtons;
+    private ImageButton mBackButton;
+    private ImageButton mOkButton;
+    private int mRows = 3;
+    private int mCols = 3;
+    // Workaround for button incorrect centering
+    private int mPaddingLeft = 0;
+    private int mPaddingTop = 0;
+    private int mPaddingRight = 0;
+    private int mPaddingBottom = 0;
+    private int mHorizontalSpacing;
+    private int mVerticalSpacing;
+    private int mChildWidth;
+    private int mChildHeight;
+    private int mMaxHeight;
+    private int mMaxWidth;
+    private int mHeight;
+    private int mWidth;
+    /**
+     * How many times may the view be taller than wide?
+     */
+    private float mMaxVScale = 1.2f;
+    /**
+     * How many times may the view be wider than tall?
+     */
+    private float mMaxHScale = 1.2f;
 
-	/** The default is left for back, right for OK */
-	// private boolean mSwapActionButtons = false;
-
-	private ImageButton mBackButton;
-	private ImageButton mOkButton;
-
-	private int mRows = 3;
-	private int mCols = 3;
-
-	// Workaround for button incorrect centering
-	private int mPaddingLeft = 0;
-	private int mPaddingTop = 0;
-	private int mPaddingRight = 0;
-	private int mPaddingBottom = 0;
-
-	private int mHorizontalSpacing;
-	private int mVerticalSpacing;
-	private int mChildWidth;
-	private int mChildHeight;
-
-	private int mMaxHeight;
-	private int mMaxWidth;
-	private int mHeight;
-	private int mWidth;
-
-	private final int mOkImageResource = R.drawable.ic_action_accept;
-	private final int mBackImageResource = R.drawable.ic_action_cancel;
-
-	/** How many times may the view be taller than wide? */
-	private float mMaxVScale = 1.2f;
-	/** How many times may the view be wider than tall? */
-	private float mMaxHScale = 1.2f;
-
-	private boolean mStarted;
+    private boolean mStarted;
 
     private boolean mEnableHapticFeedback = false;
 
-	private OnNumberListener mListener;
+    private OnNumberListener mListener;
 
-	// private TextView mTextView;
+    // private TextView mTextView;
 
-	public void setListener(OnNumberListener listener) {
-		this.mListener = listener;
-	}
+    public PasswordView(Context context) {
+        super(context);
+    }
 
-	public PasswordView(Context context) {
-		super(context);
-	}
-
-	public PasswordView(Context context, AttributeSet attrs) {
-		super(context, attrs);
-		TypedArray a = context.obtainStyledAttributes(attrs,
-				R.styleable.PasswordView);
-		/*
+    public PasswordView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        TypedArray a = context.obtainStyledAttributes(attrs,
+                R.styleable.PasswordView);
+        /*
 	  If this is true, all children will be square, so the height of this view
 	  will be {@link #mChildHeight} * {@link #mRows} and the width will be
 	  {@link #mChildWidth} * {@link #mCols}<br>
@@ -89,400 +85,400 @@ public class PasswordView extends ViewGroup implements OnClickListener,
 	 */
         boolean mSquareChildren;
         try {
-			mHorizontalSpacing = a.getDimensionPixelSize(
-					R.styleable.PasswordView_horizontalSpacing, 0);
-			mVerticalSpacing = a.getDimensionPixelSize(
-					R.styleable.PasswordView_verticalSpacing, 0);
-			mRows = a.getInteger(R.styleable.PasswordView_rows, mRows);
-			mCols = a.getInteger(R.styleable.PasswordView_cols, mCols);
+            mHorizontalSpacing = a.getDimensionPixelSize(
+                    R.styleable.PasswordView_horizontalSpacing, 0);
+            mVerticalSpacing = a.getDimensionPixelSize(
+                    R.styleable.PasswordView_verticalSpacing, 0);
+            mRows = a.getInteger(R.styleable.PasswordView_rows, mRows);
+            mCols = a.getInteger(R.styleable.PasswordView_cols, mCols);
 
-			// Avoid Arithmetic Exceptions
-			if (mRows <= 0)
-				mRows = 1;
-			if (mCols <= 0)
-				mCols = 1;
+            // Avoid Arithmetic Exceptions
+            if (mRows <= 0)
+                mRows = 1;
+            if (mCols <= 0)
+                mCols = 1;
 
-			mMaxWidth = a.getDimensionPixelSize(
-					R.styleable.PasswordView_maxWidth, 0);
-			mMaxHeight = a.getDimensionPixelSize(
-					R.styleable.PasswordView_maxHeight, 0);
-			mMaxHScale = a.getFloat(R.styleable.PasswordView_maxHScale, 1F);
-			mMaxVScale = a.getFloat(R.styleable.PasswordView_maxVScale, 1F);
+            mMaxWidth = a.getDimensionPixelSize(
+                    R.styleable.PasswordView_maxWidth, 0);
+            mMaxHeight = a.getDimensionPixelSize(
+                    R.styleable.PasswordView_maxHeight, 0);
+            mMaxHScale = a.getFloat(R.styleable.PasswordView_maxHScale, 1F);
+            mMaxVScale = a.getFloat(R.styleable.PasswordView_maxVScale, 1F);
 
-			mSquareChildren = a.getBoolean(
-					R.styleable.PasswordView_squareChildren, false);
+            mSquareChildren = a.getBoolean(
+                    R.styleable.PasswordView_squareChildren, false);
 
-		} finally {
-			a.recycle();
-		}
+        } finally {
+            a.recycle();
+        }
 
-		// This prevents a bug with children not being measured correctly
-		mPaddingLeft = getPaddingLeft();
-		mPaddingRight = getPaddingRight();
-		mPaddingTop = getPaddingTop();
-		mPaddingBottom = getPaddingBottom();
-		setPadding(0, 0, 0, 0);
+        // This prevents a bug with children not being measured correctly
+        mPaddingLeft = getPaddingLeft();
+        mPaddingRight = getPaddingRight();
+        mPaddingTop = getPaddingTop();
+        mPaddingBottom = getPaddingBottom();
+        setPadding(0, 0, 0, 0);
 
-		if (mSquareChildren && mHorizontalSpacing == mVerticalSpacing) {
-			mMaxHScale = (float) mCols / mRows;
-			mMaxVScale = (float) mRows / mCols;
-		} else if (mSquareChildren) {
-			Log.w(TAG,
-					"To get square children, horizontal and vertical spacing should be set to equal!");
-		}
-	}
+        if (mSquareChildren && mHorizontalSpacing == mVerticalSpacing) {
+            mMaxHScale = (float) mCols / mRows;
+            mMaxVScale = (float) mRows / mCols;
+        } else if (mSquareChildren) {
+            Log.w(TAG,
+                    "To get square children, horizontal and vertical spacing should be set to equal!");
+        }
+    }
 
-	@Override
-	protected void onFinishInflate() {
-		super.onFinishInflate();
+    public void setListener(OnNumberListener listener) {
+        this.mListener = listener;
+    }
 
-		mButtons = new Button[] { (Button) findViewById(R.id.numlock_b0),
-				(Button) findViewById(R.id.numlock_b1),
-				(Button) findViewById(R.id.numlock_b2),
-				(Button) findViewById(R.id.numlock_b3),
-				(Button) findViewById(R.id.numlock_b4),
-				(Button) findViewById(R.id.numlock_b5),
-				(Button) findViewById(R.id.numlock_b6),
-				(Button) findViewById(R.id.numlock_b7),
-				(Button) findViewById(R.id.numlock_b8),
-				(Button) findViewById(R.id.numlock_b9) };
-		for (Button b : mButtons)
-			b.setOnClickListener(this);
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
 
-		mBackButton = (ImageButton) findViewById(R.id.numlock_bLeft);
-		mOkButton = (ImageButton) findViewById(R.id.numlock_bRight);
+        mButtons = new Button[]{(Button) findViewById(R.id.numlock_b0),
+                (Button) findViewById(R.id.numlock_b1),
+                (Button) findViewById(R.id.numlock_b2),
+                (Button) findViewById(R.id.numlock_b3),
+                (Button) findViewById(R.id.numlock_b4),
+                (Button) findViewById(R.id.numlock_b5),
+                (Button) findViewById(R.id.numlock_b6),
+                (Button) findViewById(R.id.numlock_b7),
+                (Button) findViewById(R.id.numlock_b8),
+                (Button) findViewById(R.id.numlock_b9)};
+        for (Button b : mButtons)
+            b.setOnClickListener(this);
 
-		mBackButton.setImageResource(mBackImageResource);
-		mBackButton.setOnClickListener(this);
-		mBackButton.setOnLongClickListener(this);
+        mBackButton = (ImageButton) findViewById(R.id.numlock_bLeft);
+        mOkButton = (ImageButton) findViewById(R.id.numlock_bRight);
 
-		mOkButton.setImageResource(mOkImageResource);
-		mOkButton.setOnClickListener(this);
-		mOkButton.setOnLongClickListener(this);
-	}
+        mBackButton.setImageResource(mBackImageResource);
+        mBackButton.setOnClickListener(this);
+        mBackButton.setOnLongClickListener(this);
 
-	public void setButtonBackgrounds(int backgroundResId) {
-		for (Button b : mButtons) {
-			b.setBackgroundResource(backgroundResId);
-		}
-		mBackButton.setBackgroundResource(backgroundResId);
-		mOkButton.setBackgroundResource(backgroundResId);
-	}
+        mOkButton.setImageResource(mOkImageResource);
+        mOkButton.setOnClickListener(this);
+        mOkButton.setOnLongClickListener(this);
+    }
 
-	public void setButtonBackgrounds(Drawable backgroundDrawable) {
-		for (Button b : mButtons) {
-			Util.setBackgroundDrawable(b, backgroundDrawable);
-		}
-		Util.setBackgroundDrawable(mBackButton, backgroundDrawable);
-		Util.setBackgroundDrawable(mOkButton, backgroundDrawable);
-	}
+    public void setButtonBackgrounds(int backgroundResId) {
+        for (Button b : mButtons) {
+            b.setBackgroundResource(backgroundResId);
+        }
+        mBackButton.setBackgroundResource(backgroundResId);
+        mOkButton.setBackgroundResource(backgroundResId);
+    }
 
-	public interface OnNumberListener {
+    public void setButtonBackgrounds(Drawable backgroundDrawable) {
+        for (Button b : mButtons) {
+            Util.setBackgroundDrawable(b, backgroundDrawable);
+        }
+        Util.setBackgroundDrawable(mBackButton, backgroundDrawable);
+        Util.setBackgroundDrawable(mOkButton, backgroundDrawable);
+    }
 
-		public void onStart();
+    @Override
+    public void onClick(View v) {
+        if (!mStarted) {
+            mListener.onStart();
+            mStarted = true;
+        }
 
-		public void onNumberButton(String newNumber);
+        if (v.getId() == mOkButton.getId()) {
+            onOkButtonImpl();
+        } else if (v.getId() == mBackButton.getId()) {
+            onBackButtonImpl();
+        } else {
+            onNumberButtonImpl(v);
+        }
+        if (mEnableHapticFeedback) {
+            performHapticFeedback(
+                    HapticFeedbackConstants.VIRTUAL_KEY,
+                    HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING
+                            | HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+        }
+    }
 
-		public void onOkButton();
+    /**
+     * @return The distance in inches that the finger has swiped over the
+     * pattern<br>
+     * This is calculated as the distance between the pattern circles,
+     * not the real distance of the finger
+     */
+    public float getFingerDistance() {
+        // TODO Pixel to inch
+        float xppi = getResources().getDisplayMetrics().xdpi;
+        float yppi = getResources().getDisplayMetrics().ydpi;
+        float ppi = (xppi + yppi) / 2;
+        float inchesPerDot = (mChildWidth + mChildHeight) / 2 / ppi;
+        return inchesPerDot * mPassword.length();
+    }
 
-		public void onOkButtonLong();
+    @Override
+    public boolean onLongClick(View v) {
+        if (!mStarted) {
+            mListener.onStart();
+            mStarted = true;
+        }
 
-		public void onBackButton();
+        if (v.getId() == mOkButton.getId()) {
+            onOkButtonLongImpl();
+        } else if (v.getId() == mBackButton.getId()) {
+            onBackButtonLongImpl();
+        }
+        if (mEnableHapticFeedback) {
+            performHapticFeedback(
+                    HapticFeedbackConstants.LONG_PRESS,
+                    HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING
+                            | HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+        }
+        return true;
 
-		public void onBackButtonLong();
-	}
+    }
 
-	@Override
-	public void onClick(View v) {
-		if (!mStarted) {
-			mListener.onStart();
-			mStarted = true;
-		}
+    private void onBackButtonLongImpl() {
+        clearPassword();
+        if (mListener != null) {
+            mListener.onBackButtonLong();
+        }
+    }
 
-		if (v.getId() == mOkButton.getId()) {
-			onOkButtonImpl();
-		} else if (v.getId() == mBackButton.getId()) {
-			onBackButtonImpl();
-		} else {
-			onNumberButtonImpl(v);
-		}
-		if (mEnableHapticFeedback) {
-			performHapticFeedback(
-					HapticFeedbackConstants.VIRTUAL_KEY,
-					HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING
-							| HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
-		}
-	}
+    private void onOkButtonLongImpl() {
+        if (mListener != null) {
+            mListener.onOkButtonLong();
+        }
+    }
 
-	/**
-	 * 
-	 * @return The distance in inches that the finger has swiped over the
-	 *         pattern<br>
-	 *         This is calculated as the distance between the pattern circles,
-	 *         not the real distance of the finger
-	 */
-	public float getFingerDistance() {
-		// TODO Pixel to inch
-		float xppi = getResources().getDisplayMetrics().xdpi;
-		float yppi = getResources().getDisplayMetrics().ydpi;
-		float ppi = (xppi + yppi) / 2;
-		float inchesPerDot = (mChildWidth + mChildHeight) / 2 / ppi;
-		return inchesPerDot * mPassword.length();
-	}
+    private void onOkButtonImpl() {
+        if (mListener != null) {
+            mListener.onOkButton();
+        }
+    }
 
-	@Override
-	public boolean onLongClick(View v) {
-		if (!mStarted) {
-			mListener.onStart();
-			mStarted = true;
-		}
+    private void onBackButtonImpl() {
+        if (mPassword.length() != 0) {
+            // StringBuilder sb = new StringBuilder(mPassword);
+            // sb.deleteCharAt(sb.length() - 1);
+            // setPassword(sb.toString());
+            clearPassword();
+        }
+        if (mListener != null) {
+            mListener.onBackButton();
+        }
+    }
 
-		if (v.getId() == mOkButton.getId()) {
-			onOkButtonLongImpl();
-		} else if (v.getId() == mBackButton.getId()) {
-			onBackButtonLongImpl();
-		}
-		if (mEnableHapticFeedback) {
-			performHapticFeedback(
-					HapticFeedbackConstants.LONG_PRESS,
-					HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING
-							| HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
-		}
-		return true;
+    /**
+     * What happens when a number button is pressed<br>
+     *
+     * @param v The view that has been clicked
+     */
+    private void onNumberButtonImpl(View v) {
+        Button b = (Button) v;
+        final String newPassword = new StringBuilder().append(mPassword)
+                .append(b.getText()).toString();
+        setPassword(newPassword);
+        // post instead of executing, so that the
+        // last dot in the password gets displayed
+        post(new Runnable() {
+            @Override
+            public void run() {
+                if (mListener != null) {
+                    mListener.onNumberButton(newPassword);
+                }
+            }
+        });
+    }
 
-	}
+    public String getCurrentNumbers() {
+        return mPassword;
+    }
 
-	private void onBackButtonLongImpl() {
-		clearPassword();
-		if (mListener != null) {
-			mListener.onBackButtonLong();
-		}
-	}
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-	private void onOkButtonLongImpl() {
-		if (mListener != null) {
-			mListener.onOkButtonLong();
-		}
-	}
+        mWidth = resolveSize(MeasureSpec.getSize(widthMeasureSpec),
+                widthMeasureSpec);
+        mHeight = resolveSize(MeasureSpec.getSize(heightMeasureSpec),
+                heightMeasureSpec);
 
-	private void onOkButtonImpl() {
-		if (mListener != null) {
-			mListener.onOkButton();
-		}
-	}
+        correctViewSize(mWidth, mHeight, mMaxWidth, mMaxHeight, mMaxHScale,
+                mMaxVScale);
 
-	private void onBackButtonImpl() {
-		if (mPassword.length() != 0) {
-			// StringBuilder sb = new StringBuilder(mPassword);
-			// sb.deleteCharAt(sb.length() - 1);
-			// setPassword(sb.toString());
-			clearPassword();
-		}
-		if (mListener != null) {
-			mListener.onBackButton();
-		}
-	}
+        // Reset width and height because some loose pixels at the end:
+        int childMSW = MeasureSpec.makeMeasureSpec(mChildWidth,
+                MeasureSpec.EXACTLY);
+        int childMSH = MeasureSpec.makeMeasureSpec(mChildHeight,
+                MeasureSpec.EXACTLY);
 
-	/**
-	 * What happens when a number button is pressed<br>
-	 * 
-	 * @param v
-	 *            The view that has been clicked
-	 */
-	private void onNumberButtonImpl(View v) {
-		Button b = (Button) v;
-		final String newPassword = new StringBuilder().append(mPassword)
-				.append(b.getText()).toString();
-		setPassword(newPassword);
-		// post instead of executing, so that the
-		// last dot in the password gets displayed
-		post(new Runnable() {
-			@Override
-			public void run() {
-				if (mListener != null) {
-					mListener.onNumberButton(newPassword);
-				}
-			}
-		});
-	}
+        final int childCount = getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            View child = getChildAt(i);
+            measureChild(child, childMSW, childMSH);
+        }
 
-	public String getCurrentNumbers() {
-		return mPassword;
-	}
+        setMeasuredDimension(mWidth, mHeight);
+    }
 
-	@Override
-	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+    private void correctViewSize(int width, int height, int maxWidth,
+                                 int maxHeight, float maxHScale, float maxVScale) {
+        if (maxWidth != 0)
+            width = Math.min(width, maxWidth);
+        if (maxHeight != 0)
+            height = Math.min(height, maxHeight);
+        float hScale = (float) width / height;
+        float vScale = (float) height / width;
+        // Vertical stretch
+        if (hScale <= maxHScale) {
+            int desiredHeight = (int) ((float) width * maxVScale);
+            height = Math.min(height, desiredHeight);
+        }
+        // Horizontal stretch
+        else if (vScale <= maxVScale) {
+            int desiredWidth = (int) ((float) height * maxHScale);
+            width = Math.min(width, desiredWidth);
+        }
 
-		mWidth = resolveSize(MeasureSpec.getSize(widthMeasureSpec),
-				widthMeasureSpec);
-		mHeight = resolveSize(MeasureSpec.getSize(heightMeasureSpec),
-				heightMeasureSpec);
+        int horizontalSpacing = mHorizontalSpacing * (mCols - 1);
+        int verticalSpacing = mVerticalSpacing * (mRows - 1);
 
-		correctViewSize(mWidth, mHeight, mMaxWidth, mMaxHeight, mMaxHScale,
-				mMaxVScale);
+        mChildWidth = (width - mPaddingLeft - mPaddingRight - horizontalSpacing)
+                / mCols;
+        mChildHeight = (height - mPaddingTop - mPaddingBottom - verticalSpacing)
+                / mRows;
 
-		// Reset width and height because some loose pixels at the end:
-		int childMSW = MeasureSpec.makeMeasureSpec(mChildWidth,
-				MeasureSpec.EXACTLY);
-		int childMSH = MeasureSpec.makeMeasureSpec(mChildHeight,
-				MeasureSpec.EXACTLY);
+        // Set the correct values
+        mWidth = mPaddingLeft + mPaddingRight + (mChildWidth * mCols)
+                + (mHorizontalSpacing * (mCols - 1));
+        mHeight = mPaddingTop + mPaddingBottom + (mChildHeight * mRows)
+                + (mVerticalSpacing * (mRows - 1));
+    }
 
-		final int childCount = getChildCount();
-		for (int i = 0; i < childCount; i++) {
-			View child = getChildAt(i);
-			measureChild(child, childMSW, childMSH);
-		}
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        final int count = getChildCount();
+        int childL, childT;
+        childL = childT = 0;
 
-		setMeasuredDimension(mWidth, mHeight);
-	}
+        for (int i = 0; i < count; i++) {
+            final View child = getChildAt(i);
+            childL = mPaddingLeft
+                    + ((mHorizontalSpacing + mChildWidth) * (i % mCols));
+            childT = mPaddingTop
+                    + ((mVerticalSpacing + mChildHeight) * (i / mCols));
 
-	private void correctViewSize(int width, int height, int maxWidth,
-			int maxHeight, float maxHScale, float maxVScale) {
-		if (maxWidth != 0)
-			width = Math.min(width, maxWidth);
-		if (maxHeight != 0)
-			height = Math.min(height, maxHeight);
-		float hScale = (float) width / height;
-		float vScale = (float) height / width;
-		// Vertical stretch
-		if (hScale <= maxHScale) {
-			int desiredHeight = (int) ((float) width * maxVScale);
-			height = Math.min(height, desiredHeight);
-		}
-		// Horizontal stretch
-		else if (vScale <= maxVScale) {
-			int desiredWidth = (int) ((float) height * maxHScale);
-			width = Math.min(width, desiredWidth);
-		}
+            child.layout(childL, childT, childL + mChildWidth, childT
+                    + mChildHeight);
+        }
+    }
 
-		int horizontalSpacing = mHorizontalSpacing * (mCols - 1);
-		int verticalSpacing = mVerticalSpacing * (mRows - 1);
+    /**
+     * Sets the horizontal spacing in pixels
+     *
+     * @param horizontalSpacing
+     */
+    public void setHorizontalSpacing(int horizontalSpacing) {
+        this.mHorizontalSpacing = horizontalSpacing;
+    }
 
-		mChildWidth = (width - mPaddingLeft - mPaddingRight - horizontalSpacing)
-				/ mCols;
-		mChildHeight = (height - mPaddingTop - mPaddingBottom - verticalSpacing)
-				/ mRows;
+    /**
+     * Sets the vertical spacing in pixels
+     *
+     * @param verticalSpacing
+     */
+    public void setVerticalSpacing(int verticalSpacing) {
+        this.mVerticalSpacing = verticalSpacing;
+    }
 
-		// Set the correct values
-		mWidth = mPaddingLeft + mPaddingRight + (mChildWidth * mCols)
-				+ (mHorizontalSpacing * (mCols - 1));
-		mHeight = mPaddingTop + mPaddingBottom + (mChildHeight * mRows)
-				+ (mVerticalSpacing * (mRows - 1));
-	}
+    public void clearPassword() {
+        setPassword(null);
+    }
 
-	@Override
-	protected void onLayout(boolean changed, int l, int t, int r, int b) {
-		final int count = getChildCount();
-		int childL, childT;
-		childL = childT = 0;
+    /**
+     * Get the current password entered by the user. Never null.
+     *
+     * @return
+     */
+    public String getPassword() {
+        return mPassword;
+    }
 
-		for (int i = 0; i < count; i++) {
-			final View child = getChildAt(i);
-			childL = mPaddingLeft
-					+ ((mHorizontalSpacing + mChildWidth) * (i % mCols));
-			childT = mPaddingTop
-					+ ((mVerticalSpacing + mChildHeight) * (i / mCols));
+    /**
+     * Update the internal password this {@link PasswordView} is working with.
+     * If password is null then it will be cleared.
+     *
+     * @param password
+     */
+    public void setPassword(String password) {
+        this.mPassword = (password != null) ? password : "";
+    }
 
-			child.layout(childL, childT, childL + mChildWidth, childT
-					+ mChildHeight);
-		}
-	}
+    public int getUnpaddedWidth() {
+        return getWidth() - mPaddingLeft - mPaddingRight;
+    }
 
-	/**
-	 * Sets the horizontal spacing in pixels
-	 * 
-	 * @param horizontalSpacing
-	 */
-	public void setHorizontalSpacing(int horizontalSpacing) {
-		this.mHorizontalSpacing = horizontalSpacing;
-	}
+    public void setOkButtonVisibility(int visibility) {
+        if (mOkButton != null) {
+            mOkButton.setVisibility(visibility);
+        }
+    }
 
-	/**
-	 * Sets the vertical spacing in pixels
-	 * 
-	 * @param verticalSpacing
-	 */
-	public void setVerticalSpacing(int verticalSpacing) {
-		this.mVerticalSpacing = verticalSpacing;
-	}
+    public void setBackButtonVisibility(int visibility) {
+        if (mBackButton != null) {
+            mBackButton.setVisibility(visibility);
+        }
+    }
 
-	/**
-	 * Update the internal password this {@link PasswordView} is working with.
-	 * If password is null then it will be cleared.
-	 * 
-	 * @param password
-	 */
-	public void setPassword(String password) {
-		this.mPassword = (password != null) ? password : "";
-	}
+    /**
+     * @param swap True if the buttons should be swapped
+     */
+    public void setSwitchButtons(boolean swap) {
+        int okVisibility = mOkButton.getVisibility();
+        int backVisibility = mBackButton.getVisibility();
+        if (swap) {
+            mBackButton = (ImageButton) findViewById(R.id.numlock_bRight);
+            mOkButton = (ImageButton) findViewById(R.id.numlock_bLeft);
+        } else {
+            mBackButton = (ImageButton) findViewById(R.id.numlock_bLeft);
+            mOkButton = (ImageButton) findViewById(R.id.numlock_bRight);
+        }
+        mOkButton.setImageResource(mOkImageResource);
+        mBackButton.setImageResource(mBackImageResource);
+        mOkButton.setVisibility(okVisibility);
+        mBackButton.setVisibility(backVisibility);
 
-	public void clearPassword() {
-		setPassword(null);
-	}
+    }
 
-	/**
-	 * Get the current password entered by the user. Never null.
-	 * 
-	 * @return
-	 */
-	public String getPassword() {
-		return mPassword;
-	}
+    /**
+     * @return Whether the view has tactile feedback enabled.
+     */
+    public boolean isTactileFeedbackEnabled() {
+        return mEnableHapticFeedback;
+    }
 
-	public int getUnpaddedWidth() {
-		return getWidth() - mPaddingLeft - mPaddingRight;
-	}
+    /**
+     * Set whether the view will use tactile feedback. If true, there will be
+     * tactile feedback as the user enters the pattern.
+     *
+     * @param tactileFeedbackEnabled Whether tactile feedback is enabled
+     */
+    public void setTactileFeedbackEnabled(boolean tactileFeedbackEnabled) {
+        mEnableHapticFeedback = tactileFeedbackEnabled;
+    }
 
-	public void setOkButtonVisibility(int visibility) {
-		if (mOkButton != null) {
-			mOkButton.setVisibility(visibility);
-		}
-	}
+    public interface OnNumberListener {
 
-	public void setBackButtonVisibility(int visibility) {
-		if (mBackButton != null) {
-			mBackButton.setVisibility(visibility);
-		}
-	}
+        public void onStart();
 
-	/**
-	 * @param swap
-	 *            True if the buttons should be swapped
-	 */
-	public void setSwitchButtons(boolean swap) {
-		int okVisibility = mOkButton.getVisibility();
-		int backVisibility = mBackButton.getVisibility();
-		if (swap) {
-			mBackButton = (ImageButton) findViewById(R.id.numlock_bRight);
-			mOkButton = (ImageButton) findViewById(R.id.numlock_bLeft);
-		} else {
-			mBackButton = (ImageButton) findViewById(R.id.numlock_bLeft);
-			mOkButton = (ImageButton) findViewById(R.id.numlock_bRight);
-		}
-		mOkButton.setImageResource(mOkImageResource);
-		mBackButton.setImageResource(mBackImageResource);
-		mOkButton.setVisibility(okVisibility);
-		mBackButton.setVisibility(backVisibility);
+        public void onNumberButton(String newNumber);
 
-	}
+        public void onOkButton();
 
-	/**
-	 * @return Whether the view has tactile feedback enabled.
-	 */
-	public boolean isTactileFeedbackEnabled() {
-		return mEnableHapticFeedback;
-	}
+        public void onOkButtonLong();
 
-	/**
-	 * Set whether the view will use tactile feedback. If true, there will be
-	 * tactile feedback as the user enters the pattern.
-	 * 
-	 * @param tactileFeedbackEnabled
-	 *            Whether tactile feedback is enabled
-	 */
-	public void setTactileFeedbackEnabled(boolean tactileFeedbackEnabled) {
-		mEnableHapticFeedback = tactileFeedbackEnabled;
-	}
+        public void onBackButton();
+
+        public void onBackButtonLong();
+    }
 
 }

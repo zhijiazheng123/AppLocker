@@ -73,7 +73,8 @@
 
     <!-- BEGIN v2.0 Strings -->
     <!-- For android 4.2 and below, the system will not kill Locker -->
-    <string name="pref_desc_show_notification"> نمایش یک اعلان زمانی که برنامه ها قفل شده اند </string>   <!-- Since Android 4.3, system kills app if it doesn't show a notification, we should warnt he users about this -->
+    <string name="pref_desc_show_notification"> نمایش یک اعلان زمانی که برنامه ها قفل شده اند </string>
+    <!-- Since Android 4.3, system kills app if it doesn't show a notification, we should warnt he users about this -->
     <string name="notification_title">برنامه قفل گذاری فعال است </string>
     <string name="notification_state_locked">جهت غیر فعال کردن برنامه قفل گذاری اینجا را کلیک نمایید</string>
     <!-- END v2.0 Strings -->

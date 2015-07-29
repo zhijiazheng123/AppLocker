@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    android:key="@string/pref_key_screen" >
+    android:key="@string/pref_key_screen">
 
     <Preference
         android:key="@string/pref_key_lock_type"
@@ -17,7 +17,7 @@
     <!-- PASSWORD -->
     <PreferenceCategory
         android:key="@string/pref_key_cat_password"
-        android:title="@string/pref_tit_cat_password" >
+        android:title="@string/pref_tit_cat_password">
 
         <!-- Vibration -->
         <CheckBoxPreference
@@ -35,7 +35,7 @@
     <!-- PATTERN -->
     <PreferenceCategory
         android:key="@string/pref_key_cat_pattern"
-        android:title="@string/pref_tit_cat_pattern" >
+        android:title="@string/pref_tit_cat_pattern">
 
         <!-- Pattern Color -->
         <ListPreference
@@ -74,7 +74,7 @@
     </PreferenceCategory>
     <PreferenceCategory
         android:key="@string/pref_key_cat_general"
-        android:title="@string/pref_tit_cat_general" >
+        android:title="@string/pref_tit_cat_general">
 
         <!-- Start at boot -->
         <CheckBoxPreference
@@ -132,7 +132,7 @@
     <!-- Notification related preferences -->
     <PreferenceCategory
         android:key="@string/pref_key_cat_notification"
-        android:title="@string/pref_tit_cat_notification" >
+        android:title="@string/pref_tit_cat_notification">
 
         <!-- Show notification -->
         <CheckBoxPreference
@@ -152,7 +152,7 @@
     <!-- Launcher related preferences -->
     <PreferenceCategory
         android:key="@string/pref_key_cat_launcher"
-        android:title="@string/pref_tit_cat_launcher" >
+        android:title="@string/pref_tit_cat_launcher">
 
         <!-- Dial launch status -->
 
@@ -178,21 +178,19 @@
     </PreferenceCategory>
     <PreferenceCategory
         android:key="@string/pref_key_cat_about"
-        android:title="@string/pref_tit_cat_about" >
+        android:title="@string/pref_tit_cat_about">
         <Preference
             android:key="@string/pref_key_changelog"
-            android:title="@string/cl_title" >
-        </Preference>
+            android:title="@string/cl_title"></Preference>
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_tit_recovery_code" >
+    <PreferenceCategory android:title="@string/pref_tit_recovery_code">
         <Preference
             android:key="@string/pref_key_recovery_code"
-            android:title="@string/pref_tit_recovery_code" >
-        </Preference>
+            android:title="@string/pref_tit_recovery_code"></Preference>
     </PreferenceCategory>
 
     <!-- ANIMATIONS -->
-    <PreferenceCategory android:title="@string/pref_tit_cat_anim_show" >
+    <PreferenceCategory android:title="@string/pref_tit_cat_anim_show">
         <ListPreference
             android:defaultValue="@string/pref_val_anim_none"
             android:entries="@array/pref_names_anim"
@@ -210,7 +208,7 @@
             android:summary="@string/pref_desc_anim_millis"
             android:title="@string/pref_tit_anim_millis" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_tit_cat_anim_hide" >
+    <PreferenceCategory android:title="@string/pref_tit_cat_anim_hide">
         <ListPreference
             android:defaultValue="@string/pref_val_anim_fade"
             android:entries="@array/pref_names_anim"

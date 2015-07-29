@@ -24,7 +24,7 @@
     <color name="pro_item_tit_free">#000</color>
     <color name="pro_item_tit_ads">#000</color>
     <color name="pro_item_tit_paid">#000</color>
-    
+
     <!-- Switch -->
     <color name="switch_on_bg">#16a085</color>
     <color name="switch_off_bg">#888</color>

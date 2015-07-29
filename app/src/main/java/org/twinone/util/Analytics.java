@@ -1,5 +1,15 @@
 package org.twinone.util;
 
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Build;
+import android.provider.Settings.Secure;
+import android.util.Log;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -14,401 +24,384 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.provider.Settings.Secure;
-import android.util.Log;
-
 public class Analytics {
 
-	private static final String PREF_ANALYTICS_FILE = "com.twinone.analytics";
-	private static final String PREF_PERSISTENT_FILE = "com.twinone.analytics.prefs";
-	private static final String PREF_KEY_ENABLE_ANALYTICS = "_ALLOW_ANALYTICS_SEND_USAGE_STATISTICS";
+    private static final String PREF_ANALYTICS_FILE = "com.twinone.analytics";
+    private static final String PREF_PERSISTENT_FILE = "com.twinone.analytics.prefs";
+    private static final String PREF_KEY_ENABLE_ANALYTICS = "_ALLOW_ANALYTICS_SEND_USAGE_STATISTICS";
 
-	private static final String PREF_KEY_ANALYTICS_URL = "com.twinone.analytics.url";
-	private static final String TAG = "Analytics";
+    private static final String PREF_KEY_ANALYTICS_URL = "com.twinone.analytics.url";
+    private static final String TAG = "Analytics";
 
-	/**
-	 * Auto included key that has the installation id for this user
-	 */
-	private static final String ANALYTICS_KEY_INSTALLATION_ID = "_installation_id";
-	/**
-	 * Auto included key that provides the android version for this device
-	 */
-	private static final String ANALYTICS_KEY_ANDROID_VERSION = "_android_version";
-
-	// private Context mContext;
-	private final SharedPreferences mPrefs;
-	private final SharedPreferences.Editor mEditor;
-    private final Context mContext;
-
-	public Analytics(Context c) {
-		mContext = c;
-		mPrefs = c.getSharedPreferences(PREF_ANALYTICS_FILE,
-				Context.MODE_PRIVATE);
-		mEditor = mPrefs.edit();
-	}
-
-	/**
-	 * Utility method for when the user decides to allow or decline analytics.
-	 * You should respect the preference of the user.
-	 *
+    /**
+     * Auto included key that has the installation id for this user
      */
-	@SuppressLint("CommitPrefEdits")
-	public final void setEnableAnalytics(boolean enable) {
-		SharedPreferences.Editor editor = mContext.getSharedPreferences(
-				PREF_PERSISTENT_FILE, Context.MODE_PRIVATE).edit();
-		editor.putBoolean(PREF_KEY_ENABLE_ANALYTICS, enable);
-		save(editor);
-	}
+    private static final String ANALYTICS_KEY_INSTALLATION_ID = "_installation_id";
+    /**
+     * Auto included key that provides the android version for this device
+     */
+    private static final String ANALYTICS_KEY_ANDROID_VERSION = "_android_version";
+    private static final String INSTALLATION = "com.twinone.analytics.installation_id";
+    /**
+     * Installation id
+     */
+    private static String INSTALLATION_ID = null;
+    // private Context mContext;
+    private final SharedPreferences mPrefs;
+    private final SharedPreferences.Editor mEditor;
+    private final Context mContext;
+    private String mDefaultUrl = null;
 
-	public long increment(String key) {
-		long stored = mPrefs.getLong(key, 0);
-		stored++;
-		mEditor.putLong(key, stored);
-		autoSave();
-		return stored;
-	}
+    public Analytics(Context c) {
+        mContext = c;
+        mPrefs = c.getSharedPreferences(PREF_ANALYTICS_FILE,
+                Context.MODE_PRIVATE);
+        mEditor = mPrefs.edit();
+    }
 
-	public long increment(String key, long value) {
-		long stored = mPrefs.getLong(key, 0);
-		stored += value;
-		mEditor.putLong(key, stored);
-		autoSave();
-		return stored;
-	}
+    @TargetApi(Build.VERSION_CODES.GINGERBREAD)
+    private static void save(SharedPreferences.Editor editor) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD) {
+            editor.commit();
+        } else {
+            editor.apply();
+        }
+    }
 
-	public long decrement(String key) {
-		long value = mPrefs.getLong(key, 0);
-		value--;
-		mEditor.putLong(key, value);
-		autoSave();
-		return value;
-	}
+    private static String readInstallationFile(File installation)
+            throws IOException {
+        RandomAccessFile f = new RandomAccessFile(installation, "r");
+        byte[] bytes = new byte[(int) f.length()];
+        f.readFully(bytes);
+        f.close();
+        return new String(bytes);
+    }
 
-	public long decrement(String key, long value) {
-		long stored = mPrefs.getLong(key, 0);
-		stored -= value;
-		mEditor.putLong(key, stored);
-		autoSave();
-		return stored;
-	}
+    // Floats
 
-	// Floats
+    private static void writeInstallationFile(File installation)
+            throws IOException {
+        FileOutputStream out = new FileOutputStream(installation);
+        String id = UUID.randomUUID().toString();
+        out.write(id.getBytes());
+        out.close();
+    }
 
-	public float incrementFloat(String key) {
-		float stored = mPrefs.getFloat(key, 0);
-		stored++;
-		mEditor.putFloat(key, stored);
-		autoSave();
-		return stored;
-	}
+    /**
+     * Utility method for when the user decides to allow or decline analytics.
+     * You should respect the preference of the user.
+     */
+    @SuppressLint("CommitPrefEdits")
+    public final void setEnableAnalytics(boolean enable) {
+        SharedPreferences.Editor editor = mContext.getSharedPreferences(
+                PREF_PERSISTENT_FILE, Context.MODE_PRIVATE).edit();
+        editor.putBoolean(PREF_KEY_ENABLE_ANALYTICS, enable);
+        save(editor);
+    }
 
-	public float incrementFloat(String key, float value) {
-		float stored = mPrefs.getFloat(key, 0);
-		stored += value;
-		mEditor.putFloat(key, stored);
-		autoSave();
-		return stored;
-	}
+    public long increment(String key) {
+        long stored = mPrefs.getLong(key, 0);
+        stored++;
+        mEditor.putLong(key, stored);
+        autoSave();
+        return stored;
+    }
 
-	public float decrementFloat(String key) {
-		float value = mPrefs.getFloat(key, 0);
-		value--;
-		mEditor.putFloat(key, value);
-		autoSave();
-		return value;
-	}
+    public long increment(String key, long value) {
+        long stored = mPrefs.getLong(key, 0);
+        stored += value;
+        mEditor.putLong(key, stored);
+        autoSave();
+        return stored;
+    }
 
-	public float decrementFloat(String key, float value) {
-		float stored = mPrefs.getFloat(key, 0);
-		stored -= value;
-		mEditor.putFloat(key, stored);
-		autoSave();
-		return stored;
-	}
+    public long decrement(String key) {
+        long value = mPrefs.getLong(key, 0);
+        value--;
+        mEditor.putLong(key, value);
+        autoSave();
+        return value;
+    }
 
-	/**
-	 * May return null if this preference has not yet been set
-	 */
-	public String getString(String key) {
-		return mPrefs.getString(key, null);
-	}
+    public long decrement(String key, long value) {
+        long stored = mPrefs.getLong(key, 0);
+        stored -= value;
+        mEditor.putLong(key, stored);
+        autoSave();
+        return stored;
+    }
 
-	public long getLong(String key) {
-		return mPrefs.getLong(key, 0);
-	}
+    public float incrementFloat(String key) {
+        float stored = mPrefs.getFloat(key, 0);
+        stored++;
+        mEditor.putFloat(key, stored);
+        autoSave();
+        return stored;
+    }
 
-	public float getFloat(String key) {
-		return mPrefs.getFloat(key, 0);
-	}
+    public float incrementFloat(String key, float value) {
+        float stored = mPrefs.getFloat(key, 0);
+        stored += value;
+        mEditor.putFloat(key, stored);
+        autoSave();
+        return stored;
+    }
 
-	public boolean getBoolean(String key) {
-		if (mPrefs == null) {
-			Log.e(TAG, "Prefs is null");
-		}
-		if (key == null) {
-			Log.e(TAG, "key is null");
-		}
-		try {
-			return mPrefs.getBoolean(key, false);
-		} catch (Exception e) {
-			Log.e("", "Exception in getBoolean", e);
-			return false;
-		}
-	}
+    public float decrementFloat(String key) {
+        float value = mPrefs.getFloat(key, 0);
+        value--;
+        mEditor.putFloat(key, value);
+        autoSave();
+        return value;
+    }
 
-	/**
-	 * Returns all analytics, never null
-	 * 
-	 * @return
-	 */
+    public float decrementFloat(String key, float value) {
+        float stored = mPrefs.getFloat(key, 0);
+        stored -= value;
+        mEditor.putFloat(key, stored);
+        autoSave();
+        return stored;
+    }
+
+    /**
+     * May return null if this preference has not yet been set
+     */
+    public String getString(String key) {
+        return mPrefs.getString(key, null);
+    }
+
+    public long getLong(String key) {
+        return mPrefs.getLong(key, 0);
+    }
+
+    public float getFloat(String key) {
+        return mPrefs.getFloat(key, 0);
+    }
+
+    public boolean getBoolean(String key) {
+        if (mPrefs == null) {
+            Log.e(TAG, "Prefs is null");
+        }
+        if (key == null) {
+            Log.e(TAG, "key is null");
+        }
+        try {
+            return mPrefs.getBoolean(key, false);
+        } catch (Exception e) {
+            Log.e("", "Exception in getBoolean", e);
+            return false;
+        }
+    }
+
+    /**
+     * Returns all analytics, never null
+     *
+     * @return
+     */
     Map<String, String> getAll() {
-		Map<String, String> result = new HashMap<>();
-		for (Map.Entry<String, ?> e : mPrefs.getAll().entrySet()) {
-			result.put(e.getKey(), String.valueOf(e.getValue()));
-		}
-		result.put(ANALYTICS_KEY_INSTALLATION_ID, getInstallationId());
-		result.put(ANALYTICS_KEY_ANDROID_VERSION,
-				String.valueOf(Build.VERSION.SDK_INT));
-		return result;
-	}
+        Map<String, String> result = new HashMap<>();
+        for (Map.Entry<String, ?> e : mPrefs.getAll().entrySet()) {
+            result.put(e.getKey(), String.valueOf(e.getValue()));
+        }
+        result.put(ANALYTICS_KEY_INSTALLATION_ID, getInstallationId());
+        result.put(ANALYTICS_KEY_ANDROID_VERSION,
+                String.valueOf(Build.VERSION.SDK_INT));
+        return result;
+    }
 
-	public void putBoolean(String key, boolean enabled) {
-		mEditor.putBoolean(key, enabled);
-		autoSave();
-	}
+    public void putBoolean(String key, boolean enabled) {
+        mEditor.putBoolean(key, enabled);
+        autoSave();
+    }
 
-	public void putString(String key, String value) {
-		mEditor.putString(key, value);
-		autoSave();
-	}
+    public void putString(String key, String value) {
+        mEditor.putString(key, value);
+        autoSave();
+    }
 
-	private void autoSave() {
+    private void autoSave() {
         boolean mAutoSave = true;
         if (mAutoSave) {
-			save();
-		}
-	}
+            save();
+        }
+    }
 
-	final void save() {
-		save(mEditor);
-	}
+    final void save() {
+        save(mEditor);
+    }
 
-	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
-	private static void save(SharedPreferences.Editor editor) {
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD) {
-			editor.commit();
-		} else {
-			editor.apply();
-		}
-	}
+    public void query() {
+        query((AnalyticsListener) null);
+    }
 
-	public static interface AnalyticsListener {
-		public void onServerResponse(String response);
-	}
-
-	public void query() {
-		query((AnalyticsListener) null);
-	}
-
-	/**
-	 * Primary method that should be called when you want to know something
-	 * about the device's version (async, so a listener is needed)
-	 */
+    /**
+     * Primary method that should be called when you want to know something
+     * about the device's version (async, so a listener is needed)
+     */
     void query(AnalyticsListener listener) {
-		query(listener, null);
-	}
+        query(listener, null);
+    }
 
-	public void query(Map<String, String> params) {
-		query(null, params);
-	}
+    public void query(Map<String, String> params) {
+        query(null, params);
+    }
 
-	/**
-	 * 
-	 * @param listener
-	 * @param params
-	 *            Additional parameters to be appended to the GET request
-	 */
+    /**
+     * @param listener
+     * @param params   Additional parameters to be appended to the GET request
+     */
     void query(AnalyticsListener listener, Map<String, String> params) {
-		Uri.Builder ub = getUrl().buildUpon();
-		// Add all analytics
-		Map<String, String> analytics = getAll();
-		// Put params -> analytics (hashmap) to avoid duplicates
-		if (params != null) {
-			for (Map.Entry<String, String> e : params.entrySet()) {
-				analytics.put(e.getKey(), e.getValue());
-			}
-		}
-		for (Map.Entry<String, String> e : analytics.entrySet()) {
-			ub.appendQueryParameter(e.getKey(), e.getValue());
-		}
+        Uri.Builder ub = getUrl().buildUpon();
+        // Add all analytics
+        Map<String, String> analytics = getAll();
+        // Put params -> analytics (hashmap) to avoid duplicates
+        if (params != null) {
+            for (Map.Entry<String, String> e : params.entrySet()) {
+                analytics.put(e.getKey(), e.getValue());
+            }
+        }
+        for (Map.Entry<String, String> e : analytics.entrySet()) {
+            ub.appendQueryParameter(e.getKey(), e.getValue());
+        }
 
-		new QueryServerTask(listener).execute(ub.build());
-	}
+        new QueryServerTask(listener).execute(ub.build());
+    }
 
-	private class QueryServerTask extends AsyncTask<Uri, Void, String> {
+    private String queryServerImpl(Uri uri) {
+        try {
+            Log.d(TAG, "Querying " + uri.toString());
+            URL url = new URL(uri.toString());
+            HttpURLConnection urlConnection = (HttpURLConnection) url
+                    .openConnection();
 
-		private final AnalyticsListener mListener;
+            InputStream in = new BufferedInputStream(
+                    urlConnection.getInputStream());
+            BufferedReader br = new BufferedReader(new InputStreamReader(in));
+            StringBuilder data = new StringBuilder();
+            String tmp;
+            while ((tmp = br.readLine()) != null) {
+                data.append(tmp);
+            }
+            urlConnection.disconnect();
+            return data.toString();
+        } catch (Exception e) {
+            Log.w(TAG, "Query to server failed ", e);
+            return null;
+        }
+    }
 
-		public QueryServerTask(AnalyticsListener listener) {
-			mListener = listener;
-		}
+    @SuppressLint("CommitPrefEdits")
+    public void setUrlOnce(String url) {
+        // update when different manifest versions or when there is no url set
+        // yet
+        if (getUrl() == null) {
+            setUrl(url);
+        }
+    }
 
-		@Override
-		protected String doInBackground(Uri... params) {
-			Log.d(TAG, "doInBackground");
-			final Uri url = params[0];
-			return queryServerImpl(url);
-		}
+    /**
+     * @param url
+     * @return This analytics for fluent API concatenation
+     */
+    public Analytics setDefaultUrl(String url) {
+        mDefaultUrl = url;
+        return this;
+    }
 
-		@Override
-		protected void onPostExecute(String result) {
-			Log.d(TAG, "onPostExecut");
-			if (result != null) {
-				if (mListener != null) {
-					mListener.onServerResponse(result);
-				}
-			}
-		}
-	}
+    /**
+     * Return the current URL, or null if it was not yet set.<br>
+     * This will also append the ?v=versionCode to the URL
+     */
+    private Uri getUrl() {
+        if (mDefaultUrl == null)
+            throw new IllegalStateException(
+                    "Should have called setDefaultUrl() first!");
 
-	private String queryServerImpl(Uri uri) {
-		try {
-			Log.d(TAG, "Querying " + uri.toString());
-			URL url = new URL(uri.toString());
-			HttpURLConnection urlConnection = (HttpURLConnection) url
-					.openConnection();
+        try {
+            String url = mContext.getSharedPreferences(PREF_PERSISTENT_FILE,
+                    Context.MODE_PRIVATE).getString(PREF_KEY_ANALYTICS_URL,
+                    null);
+            return Uri.parse(url);
+        } catch (Exception e) {
+            return Uri.parse(mDefaultUrl);
+        }
+    }
 
-			InputStream in = new BufferedInputStream(
-					urlConnection.getInputStream());
-			BufferedReader br = new BufferedReader(new InputStreamReader(in));
-			StringBuilder data = new StringBuilder();
-			String tmp;
-			while ((tmp = br.readLine()) != null) {
-				data.append(tmp);
-			}
-			urlConnection.disconnect();
-			return data.toString();
-		} catch (Exception e) {
-			Log.w(TAG, "Query to server failed ", e);
-			return null;
-		}
-	}
+    @SuppressLint("CommitPrefEdits")
+    private void setUrl(String newUrl) {
+        SharedPreferences.Editor editor = mContext.getSharedPreferences(
+                PREF_PERSISTENT_FILE, Context.MODE_PRIVATE).edit();
+        editor.putString(PREF_KEY_ANALYTICS_URL, newUrl);
+        applyCompat(editor);
+    }
 
-	@SuppressLint("CommitPrefEdits")
-	public void setUrlOnce(String url) {
-		// update when different manifest versions or when there is no url set
-		// yet
-		if (getUrl() == null) {
-			setUrl(url);
-		}
-	}
+    /**
+     * You should not use this method, use {@link #getInstallationId()} instead,
+     * which will reset with a factory reset
+     *
+     * @return
+     */
+    public String getDeviceId() {
+        String id = Secure.getString(mContext.getContentResolver(),
+                Secure.ANDROID_ID);
+        if (id == null || id.equals("9774d56d682e549c")
+                || id.equals("0000000000000000")) {
+            return "";
+        }
+        return id;
+    }
 
-	@SuppressLint("CommitPrefEdits")
-	private void setUrl(String newUrl) {
-		SharedPreferences.Editor editor = mContext.getSharedPreferences(
-				PREF_PERSISTENT_FILE, Context.MODE_PRIVATE).edit();
-		editor.putString(PREF_KEY_ANALYTICS_URL, newUrl);
-		applyCompat(editor);
-	}
+    @SuppressLint("NewApi")
+    private void applyCompat(SharedPreferences.Editor editor) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD) {
+            editor.commit();
+        } else {
+            editor.apply();
+        }
+    }
 
-	private String mDefaultUrl = null;
+    synchronized String getInstallationId() {
+        if (INSTALLATION_ID == null) {
+            File installation = new File(mContext.getFilesDir(), INSTALLATION);
+            try {
+                if (!installation.exists())
+                    writeInstallationFile(installation);
+                INSTALLATION_ID = readInstallationFile(installation);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return INSTALLATION_ID;
+    }
 
-	/**
-	 * 
-	 * @param url
-	 * @return This analytics for fluent API concatenation
-	 */
-	public Analytics setDefaultUrl(String url) {
-		mDefaultUrl = url;
-		return this;
-	}
+    public static interface AnalyticsListener {
+        public void onServerResponse(String response);
+    }
 
-	/**
-	 * Return the current URL, or null if it was not yet set.<br>
-	 * This will also append the ?v=versionCode to the URL
-	 */
-	private Uri getUrl() {
-		if (mDefaultUrl == null)
-			throw new IllegalStateException(
-					"Should have called setDefaultUrl() first!");
+    private class QueryServerTask extends AsyncTask<Uri, Void, String> {
 
-		try {
-			String url = mContext.getSharedPreferences(PREF_PERSISTENT_FILE,
-					Context.MODE_PRIVATE).getString(PREF_KEY_ANALYTICS_URL,
-					null);
-			return Uri.parse(url);
-		} catch (Exception e) {
-			return Uri.parse(mDefaultUrl);
-		}
-	}
+        private final AnalyticsListener mListener;
 
-	/**
-	 * You should not use this method, use {@link #getInstallationId()} instead,
-	 * which will reset with a factory reset
-	 * 
-	 * @return
-	 */
-	public String getDeviceId() {
-		String id = Secure.getString(mContext.getContentResolver(),
-				Secure.ANDROID_ID);
-		if (id == null || id.equals("9774d56d682e549c")
-				|| id.equals("0000000000000000")) {
-			return "";
-		}
-		return id;
-	}
+        public QueryServerTask(AnalyticsListener listener) {
+            mListener = listener;
+        }
 
-	@SuppressLint("NewApi")
-	private void applyCompat(SharedPreferences.Editor editor) {
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD) {
-			editor.commit();
-		} else {
-			editor.apply();
-		}
-	}
+        @Override
+        protected String doInBackground(Uri... params) {
+            Log.d(TAG, "doInBackground");
+            final Uri url = params[0];
+            return queryServerImpl(url);
+        }
 
-	/**
-	 * Installation id
-	 */
-	private static String INSTALLATION_ID = null;
-	private static final String INSTALLATION = "com.twinone.analytics.installation_id";
-
-	synchronized String getInstallationId() {
-		if (INSTALLATION_ID == null) {
-			File installation = new File(mContext.getFilesDir(), INSTALLATION);
-			try {
-				if (!installation.exists())
-					writeInstallationFile(installation);
-				INSTALLATION_ID = readInstallationFile(installation);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-		return INSTALLATION_ID;
-	}
-
-	private static String readInstallationFile(File installation)
-			throws IOException {
-		RandomAccessFile f = new RandomAccessFile(installation, "r");
-		byte[] bytes = new byte[(int) f.length()];
-		f.readFully(bytes);
-		f.close();
-		return new String(bytes);
-	}
-
-	private static void writeInstallationFile(File installation)
-			throws IOException {
-		FileOutputStream out = new FileOutputStream(installation);
-		String id = UUID.randomUUID().toString();
-		out.write(id.getBytes());
-		out.close();
-	}
+        @Override
+        protected void onPostExecute(String result) {
+            Log.d(TAG, "onPostExecut");
+            if (result != null) {
+                if (mListener != null) {
+                    mListener.onServerResponse(result);
+                }
+            }
+        }
+    }
 
 }

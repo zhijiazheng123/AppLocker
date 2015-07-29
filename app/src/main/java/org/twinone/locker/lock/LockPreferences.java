@@ -10,38 +10,31 @@ import java.io.Serializable;
 
 public class LockPreferences implements Serializable {
 
+    public static final int TYPE_PASSWORD = 1; // 1
+    public static final int TYPE_PATTERN = 1 << 1; // 2
     /**
      *
      */
     private static final long serialVersionUID = 2334826883469805015L;
-
-    public static final int TYPE_PASSWORD = 1; // 1
-    public static final int TYPE_PATTERN = 1 << 1; // 2
-
-    public int type;
     public final String orientation;
     public final Boolean vibration;
     public final String message;
-    public int patternSize;
-
     public final String background;
     public final int showAnimationResId;
     public final int hideAnimationResId;
     public final int showAnimationMillis;
     public final int hideAnimationMillis;
-
     // Password only
     public final String password;
     public final boolean passwordSwitchButtons;
-
     // Pattern only
     public final String pattern;
-    public boolean patternStealth;
     public final boolean patternErrorStealth;
-
     // Pro & pattern only
     public final int patternCircleResId;
-
+    public int type;
+    public int patternSize;
+    public boolean patternStealth;
     public boolean showAds = true;
 
     /**

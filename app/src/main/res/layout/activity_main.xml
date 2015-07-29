@@ -12,12 +12,12 @@
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
-            android:elevation="8dp"
-            app:elevation="8dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
+            android:elevation="8dp"
             android:minHeight="?attr/actionBarSize"
+            app:elevation="8dp"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
 
@@ -29,11 +29,11 @@
     </LinearLayout>
 
     <android.support.design.widget.NavigationView
-        android:layout_width="wrap_content"
         android:id="@+id/navView"
-        app:headerLayout="@layout/nav_bg"
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
+        app:headerLayout="@layout/nav_bg"
         app:menu="@menu/nav_menu" />
 
 </android.support.v4.widget.DrawerLayout>

@@ -7,8 +7,6 @@ import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 
-import java.lang.Override;
-
 public class InterstitialHelper extends BaseInterstitialHelper {
 
     private final BaseAdDetails mDetails;

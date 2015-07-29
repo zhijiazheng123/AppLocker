@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
     Added in Locker v1.07
     Author: Patschi (#Patschi, irc.pkern.at/6667)
 -->
@@ -35,8 +34,10 @@
 
     <!-- BEGIN v1.08 Strings -->
     <!-- This section represents Locker > Preferences -->
-    <string name="preferences_tit">Einstellungen</string> <!-- The window title -->
-    <string name="main_preferences">Einstellungen</string> <!-- The button in the main screen -->
+    <string name="preferences_tit">Einstellungen</string>
+    <!-- The window title -->
+    <string name="main_preferences">Einstellungen</string>
+    <!-- The button in the main screen -->
     <!-- clone of "locker_footer_default" -->
     <string name="pref_def_lock_message">Passwort zum Entsperren eingeben</string>
     <string name="pref_tit_lock_message">Nachricht</string>
@@ -61,7 +62,8 @@
     <string name="old_pref_tit_delay_status">Sperre verzögern</string>
     <string name="old_pref_desc_delay_status">Wenn du das korrekte Passwort eingibst, wirst du erst nach einer gewissen Zeit erneut gefragt</string>
     <string name="old_pref_tit_delay_time">Zeitverzögerung</string>
-    <string name="old_pref_dlgmsg_delay_time">Du wirst erst nach der angegebenen Zeit wieder nach dem Passwort gefragt (Sekunden)</string> <!-- END v1.08 Strings -->
+    <string name="old_pref_dlgmsg_delay_time">Du wirst erst nach der angegebenen Zeit wieder nach dem Passwort gefragt (Sekunden)</string>
+    <!-- END v1.08 Strings -->
     <string name="applist_lock_all">Alle</string>
     <string name="applist_unlock_all">Keine</string>
     <string name="main_rate">Bewerten</string>

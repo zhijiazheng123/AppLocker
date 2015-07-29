@@ -2,7 +2,7 @@
     android:id="@+id/headerRoot"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal" >
+    android:orientation="horizontal">
 
     <include
         android:id="@+id/navFlag"
@@ -15,15 +15,15 @@
         android:layout_alignParentLeft="true"
         android:layout_centerVertical="true"
         android:layout_margin="16dp"
-        android:text="@string/nav_status"
         android:layout_toLeftOf="@id/navFlag"
+        android:text="@string/nav_status"
         android:textAppearance="@android:style/TextAppearance"
         android:textColor="#666666" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_gravity="bottom"
         android:layout_alignParentBottom="true"
+        android:layout_gravity="bottom"
         android:background="@android:color/darker_gray" />
 </RelativeLayout>

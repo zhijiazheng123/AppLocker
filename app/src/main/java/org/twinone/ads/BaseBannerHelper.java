@@ -5,15 +5,16 @@ import android.view.View;
 
 public abstract class BaseBannerHelper {
 
-    public abstract String getAdUnitId();
-
     public BaseBannerHelper() {
 
     }
+
     public BaseBannerHelper(Context c, View parent) {
     }
 
-    public abstract boolean  shouldShowAds();
+    public abstract String getAdUnitId();
+
+    public abstract boolean shouldShowAds();
 
     public abstract void loadAd();
 

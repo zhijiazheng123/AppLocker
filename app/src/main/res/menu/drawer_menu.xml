@@ -1,6 +1,6 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
-    <group android:id="@+id/menu_group_1"
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group
+        android:id="@+id/menu_group_1"
         android:checkableBehavior="single">
         <item
             android:id="@+id/menu_apps"
@@ -14,14 +14,15 @@
             android:title="@string/nav_settings" />
         <item
             android:id="@+id/menu_statistics"
-            android:visible="false"
-            android:title="@string/nav_statistics" />
+            android:title="@string/nav_statistics"
+            android:visible="false" />
         <item
             android:id="@+id/menu_test"
-            android:visible="false"
-            android:title="@string/nav_test" />
+            android:title="@string/nav_test"
+            android:visible="false" />
     </group>
-    <group android:id="@+id/menu_group_3"
+    <group
+        android:id="@+id/menu_group_3"
         android:checkableBehavior="single">
         <item
             android:id="@+id/menu_share"

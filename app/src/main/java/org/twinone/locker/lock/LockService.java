@@ -50,138 +50,30 @@ import java.io.FileNotFoundException;
 public class LockService extends Service implements View.OnClickListener,
         View.OnKeyListener {
 
+    public static final int PATTERN_COLOR_BLUE = 2;
+    public static final int PATTERN_COLOR_GREEN = 1;
+    public static final int PATTERN_COLOR_WHITE = 0;
     private static final boolean DEBUG_VIEW = true;
     private static final boolean DEBUG_BIND = true;
-
-    private enum LeftButtonAction {
-        BACK, CANCEL
-    }
-
-    private ViewState mViewState = ViewState.HIDDEN;
-
-    private enum ViewState {
-        /**
-         * The view is visible but not yet completely shown
-         */
-        SHOWING,
-        /**
-         * The view has been completely animated and the user is ready to
-         * interact with it
-         */
-        SHOWN,
-        /**
-         * The user has unlocked / pressed back, and the view is animating
-         */
-        HIDING,
-        /**
-         * The view is not visible to the user
-         */
-        HIDDEN
-    }
-
-    private class MyOnNumberListener implements OnNumberListener {
-
-        @Override
-        public void onStart() {
-            mTimeFirstFingerDown = System.nanoTime();
-        }
-
-        @Override
-        public void onBackButton() {
-            updatePassword();
-        }
-
-        @Override
-        public void onBackButtonLong() {
-            updatePassword();
-        }
-
-        @Override
-        public void onNumberButton(String newPassword) {
-            if (newPassword.length() > MAX_PASSWORD_LENGTH) {
-                newPassword = newPassword.substring(0, MAX_PASSWORD_LENGTH);
-                mLockPasswordView.setPassword(newPassword);
-            }
-            updatePasswordTextView(newPassword);
-            if (ACTION_COMPARE.equals(mAction)) {
-                doComparePassword(false);
-            }
-        }
-
-        @Override
-        public void onOkButton() {
-            if (ACTION_COMPARE.equals(mAction)) {
-                doComparePassword(true);
-            }
-        }
-
-        @Override
-        public void onOkButtonLong() {
-        }
-    }
-
-    private class MyOnPatternListener implements OnPatternListener {
-
-        @Override
-        public void onPatternCellAdded() {
-        }
-
-        @Override
-        public void onPatternCleared() {
-        }
-
-        @Override
-        public void onPatternDetected() {
-            if (ACTION_COMPARE.equals(mAction)) {
-                doComparePattern();
-            } else if (ACTION_CREATE.equals(mAction)) {
-                mViewMessage.setText(R.string.pattern_detected);
-            }
-        }
-
-        @Override
-        public void onPatternStart() {
-            mTimeFirstFingerDown = System.nanoTime();
-            mLockPatternView.cancelClearDelay();
-            mLockPatternView.setDisplayMode(DisplayMode.Correct);
-            if (ACTION_CREATE.equals(mAction)) {
-                if (mRightButtonAction == RightButtonAction.CONTINUE) {
-                    mViewMessage.setText(R.string.pattern_change_head);
-                } else {
-                    mViewMessage.setText(R.string.pattern_change_confirm);
-                }
-            }
-        }
-    }
-
-    private enum RightButtonAction {
-        CONFIRM, CONTINUE
-    }
-
     private static final String CLASSNAME = LockService.class.getName();
-
     /**
      * Check a currently set password, (either number or pattern)
      */
     public static final String ACTION_COMPARE = CLASSNAME + ".action.compare";
-
     /**
      * Create a new password by asking the user to enter it twice (either number
      * or pattern)
      */
     public static final String ACTION_CREATE = CLASSNAME + ".action.create";
-
-    private static final String ACTION_NOTIFY_PACKAGE_CHANGED = CLASSNAME
-            + ".action.notify_package_changed";
-
     public static final String EXTRA_LOCK = CLASSNAME + ".action.extra_lock";
-
     /**
      * When the action is {@link #ACTION_COMPARE} use {@link #EXTRA_PACKAGENAME}
      * for specifying the target app.
      */
     public static final String EXTRA_PACKAGENAME = CLASSNAME
             + ".extra.target_packagename";
+    private static final String ACTION_NOTIFY_PACKAGE_CHANGED = CLASSNAME
+            + ".action.notify_package_changed";
     /**
      * A {@link LockPreferences} providing additional details on how this
      * {@link LockService} should behave. You should start with a
@@ -189,33 +81,85 @@ public class LockService extends Service implements View.OnClickListener,
      * properties you want to.
      */
     private static final String EXTRA_PREFERENCES = CLASSNAME + ".extra.options";
-    public static final int PATTERN_COLOR_BLUE = 2;
-    public static final int PATTERN_COLOR_GREEN = 1;
-
-    public static final int PATTERN_COLOR_WHITE = 0;
     private static final String ACTION_HIDE = CLASSNAME + ".action.hide";
-
     private static final int MAX_PASSWORD_LENGTH = 8;
     private static final long PATTERN_DELAY = 600;
-
     private static final String TAG = LockService.class.getSimpleName();
-
+    private ViewState mViewState = ViewState.HIDDEN;
     /**
      * Time in terms of {@link System#nanoTime()} when the first finger was
      * placed on the view
      */
     private long mTimeFirstFingerDown;
-
     /**
      * Time in terms of {@link System#nanoTime()} when the view was completely
      * shown
      */
     private long mTimeViewShown;
-
     /**
      * Finger distance in inches
      */
     private float mFingerDistance;
+    private String mAction;
+    private BannerHelper mBannerHelper;
+    /**
+     * Called after views are inflated
+     */
+    // private AdViewManager mAdViewManager;
+    // private AppLockService mAppLockService;
+    private AppLockService mAppLockService;
+    private Analytics mAnalytics;
+    private Animation mAnimHide;
+    private Animation mAnimShow;
+    private ImageView mAppIcon;
+    private ServiceState mServiceState = ServiceState.NOT_BOUND;
+    private final ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName cn, IBinder binder) {
+            if (DEBUG_BIND)
+                Log.v(TAG, "Service bound (mServiceState=" + mServiceState
+                        + ")");
+            final AppLockService.LocalBinder b = (AppLockService.LocalBinder) binder;
+            mAppLockService = b.getInstance();
+            mServiceState = ServiceState.BOUND;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName cn) {
+            if (DEBUG_BIND)
+                Log.v(TAG, "Unbound service (mServiceState=" + mServiceState
+                        + ")");
+            // We can't make it "UNBOUND", because even if the server got
+            // unbound, android expects us to call unbindService
+            mServiceState = ServiceState.UNBINDING;
+        }
+    };
+    // views
+    private RelativeLayout mContainer;
+    private LinearLayout mFooterButtons;
+    private Intent mIntent;
+    private WindowManager.LayoutParams mLayoutParams;
+    private Button mLeftButton;
+    private LeftButtonAction mLeftButtonAction;
+    private PasswordView mLockPasswordView;
+    private PatternView mLockPatternView;
+    private ViewGroup mLockView;
+    private String mNewPassword;
+    private String mNewPattern;
+    // options
+    private String mPackageName;
+    private OnNumberListener mPasswordListener;
+    private OnPatternListener mPatternListener;
+    private Button mRightButton;
+    private RightButtonAction mRightButtonAction;
+    private View mRootView;
+    private TextView mTextViewPassword;
+    private ImageView mViewBackground;
+    private TextView mViewMessage;
+    private TextView mViewTitle;
+    private WindowManager mWindowManager;
+    private LockPreferences options;
 
     private static int calculateInSampleSize(BitmapFactory.Options options,
                                              int reqWidth, int reqHeight) {
@@ -293,104 +237,6 @@ public class LockService extends Service implements View.OnClickListener,
         }
     }
 
-    private String mAction;
-    private BannerHelper mBannerHelper;
-    /**
-     * Called after views are inflated
-     */
-    // private AdViewManager mAdViewManager;
-    // private AppLockService mAppLockService;
-    private AppLockService mAppLockService;
-    private Analytics mAnalytics;
-    private Animation mAnimHide;
-
-    private Animation mAnimShow;
-    private ImageView mAppIcon;
-
-    private ServiceState mServiceState = ServiceState.NOT_BOUND;
-
-    private enum ServiceState {
-        /**
-         * Service is not bound
-         */
-        NOT_BOUND,
-        /**
-         * We have requested binding, but not yet received it...
-         */
-        BINDING,
-        /**
-         * Service is successfully bound (we can interact with it)
-         */
-        BOUND,
-        /**
-         * Service requesting unbind
-         */
-        UNBINDING
-    }
-
-    private final ServiceConnection mConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName cn, IBinder binder) {
-            if (DEBUG_BIND)
-                Log.v(TAG, "Service bound (mServiceState=" + mServiceState
-                        + ")");
-            final AppLockService.LocalBinder b = (AppLockService.LocalBinder) binder;
-            mAppLockService = b.getInstance();
-            mServiceState = ServiceState.BOUND;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName cn) {
-            if (DEBUG_BIND)
-                Log.v(TAG, "Unbound service (mServiceState=" + mServiceState
-                        + ")");
-            // We can't make it "UNBOUND", because even if the server got
-            // unbound, android expects us to call unbindService
-            mServiceState = ServiceState.UNBINDING;
-        }
-    };
-
-    // views
-    private RelativeLayout mContainer;
-    private LinearLayout mFooterButtons;
-
-    private Intent mIntent;
-    private WindowManager.LayoutParams mLayoutParams;
-
-    private Button mLeftButton;
-
-    private LeftButtonAction mLeftButtonAction;
-
-    private PasswordView mLockPasswordView;
-
-    private PatternView mLockPatternView;
-
-    private ViewGroup mLockView;
-    private String mNewPassword;
-    private String mNewPattern;
-    // options
-    private String mPackageName;
-    private OnNumberListener mPasswordListener;
-    private OnPatternListener mPatternListener;
-    private Button mRightButton;
-    private RightButtonAction mRightButtonAction;
-
-    private View mRootView;
-
-    private TextView mTextViewPassword;
-
-    private ImageView mViewBackground;
-
-    private TextView mViewMessage;
-
-    private TextView mViewTitle;
-
-    private WindowManager mWindowManager;
-    ;
-
-    private LockPreferences options;
-
     Bitmap decodeSampledBitmapFromUri(Uri uri, int reqWidth,
                                       int reqHeight) throws FileNotFoundException {
         // First decode with inJustDecodeBounds=true to check dimensions
@@ -411,8 +257,6 @@ public class LockService extends Service implements View.OnClickListener,
     public IBinder onBind(Intent intent) {
         return null;
     }
-
-    ;
 
     @Override
     public void onClick(final View v) {
@@ -437,27 +281,6 @@ public class LockService extends Service implements View.OnClickListener,
                 break;
         }
     }
-
-    // private void showAchievementDialog(long count) {
-    // // check if it's multiple of 500, 1000, 5000
-    // boolean show = false;
-    // long tmp = 500;
-    // while (true) {
-    // if (tmp > count)
-    // break;
-    // if (count % tmp == 0)
-    // show = true;
-    // tmp *= 2;
-    // if (tmp > count)
-    // break;
-    // if (count % tmp == 0)
-    // show = true;
-    // tmp *= 5;
-    // }
-    // if (!show)
-    // return;
-    //
-    // }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -484,6 +307,7 @@ public class LockService extends Service implements View.OnClickListener,
             mServiceState = ServiceState.NOT_BOUND;
         }
     }
+    ;
 
     @Override
     public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -508,6 +332,8 @@ public class LockService extends Service implements View.OnClickListener,
 
     }
 
+    ;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent == null) {
@@ -531,6 +357,27 @@ public class LockService extends Service implements View.OnClickListener,
         }
         return START_NOT_STICKY;
     }
+
+    // private void showAchievementDialog(long count) {
+    // // check if it's multiple of 500, 1000, 5000
+    // boolean show = false;
+    // long tmp = 500;
+    // while (true) {
+    // if (tmp > count)
+    // break;
+    // if (count % tmp == 0)
+    // show = true;
+    // tmp *= 2;
+    // if (tmp > count)
+    // break;
+    // if (count % tmp == 0)
+    // show = true;
+    // tmp *= 5;
+    // }
+    // if (!show)
+    // return;
+    //
+    // }
 
     /**
      * @param explicit true if the user has clicked the OK button to explicitly ask
@@ -1151,28 +998,6 @@ public class LockService extends Service implements View.OnClickListener,
         mContainer.startAnimation(mAnimShow);
     }
 
-    /**
-     * Helper class for not needing to
-     *
-     * @author twinone
-     */
-    private static abstract class BaseAnimationListener implements
-            AnimationListener {
-
-        @Override
-        public void onAnimationStart(Animation animation) {
-        }
-
-        @Override
-        public void onAnimationEnd(Animation animation) {
-        }
-
-        @Override
-        public void onAnimationRepeat(Animation animation) {
-        }
-
-    }
-
     private void onViewShown() {
 
         mTimeViewShown = System.nanoTime();
@@ -1200,5 +1025,149 @@ public class LockService extends Service implements View.OnClickListener,
 
     private void updatePasswordTextView(String newText) {
         mTextViewPassword.setText(newText);
+    }
+
+    private enum LeftButtonAction {
+        BACK, CANCEL
+    }
+
+    private enum ViewState {
+        /**
+         * The view is visible but not yet completely shown
+         */
+        SHOWING,
+        /**
+         * The view has been completely animated and the user is ready to
+         * interact with it
+         */
+        SHOWN,
+        /**
+         * The user has unlocked / pressed back, and the view is animating
+         */
+        HIDING,
+        /**
+         * The view is not visible to the user
+         */
+        HIDDEN
+    }
+
+    private enum RightButtonAction {
+        CONFIRM, CONTINUE
+    }
+
+    private enum ServiceState {
+        /**
+         * Service is not bound
+         */
+        NOT_BOUND,
+        /**
+         * We have requested binding, but not yet received it...
+         */
+        BINDING,
+        /**
+         * Service is successfully bound (we can interact with it)
+         */
+        BOUND,
+        /**
+         * Service requesting unbind
+         */
+        UNBINDING
+    }
+
+    /**
+     * Helper class for not needing to
+     *
+     * @author twinone
+     */
+    private static abstract class BaseAnimationListener implements
+            AnimationListener {
+
+        @Override
+        public void onAnimationStart(Animation animation) {
+        }
+
+        @Override
+        public void onAnimationEnd(Animation animation) {
+        }
+
+        @Override
+        public void onAnimationRepeat(Animation animation) {
+        }
+
+    }
+
+    private class MyOnNumberListener implements OnNumberListener {
+
+        @Override
+        public void onStart() {
+            mTimeFirstFingerDown = System.nanoTime();
+        }
+
+        @Override
+        public void onBackButton() {
+            updatePassword();
+        }
+
+        @Override
+        public void onBackButtonLong() {
+            updatePassword();
+        }
+
+        @Override
+        public void onNumberButton(String newPassword) {
+            if (newPassword.length() > MAX_PASSWORD_LENGTH) {
+                newPassword = newPassword.substring(0, MAX_PASSWORD_LENGTH);
+                mLockPasswordView.setPassword(newPassword);
+            }
+            updatePasswordTextView(newPassword);
+            if (ACTION_COMPARE.equals(mAction)) {
+                doComparePassword(false);
+            }
+        }
+
+        @Override
+        public void onOkButton() {
+            if (ACTION_COMPARE.equals(mAction)) {
+                doComparePassword(true);
+            }
+        }
+
+        @Override
+        public void onOkButtonLong() {
+        }
+    }
+
+    private class MyOnPatternListener implements OnPatternListener {
+
+        @Override
+        public void onPatternCellAdded() {
+        }
+
+        @Override
+        public void onPatternCleared() {
+        }
+
+        @Override
+        public void onPatternDetected() {
+            if (ACTION_COMPARE.equals(mAction)) {
+                doComparePattern();
+            } else if (ACTION_CREATE.equals(mAction)) {
+                mViewMessage.setText(R.string.pattern_detected);
+            }
+        }
+
+        @Override
+        public void onPatternStart() {
+            mTimeFirstFingerDown = System.nanoTime();
+            mLockPatternView.cancelClearDelay();
+            mLockPatternView.setDisplayMode(DisplayMode.Correct);
+            if (ACTION_CREATE.equals(mAction)) {
+                if (mRightButtonAction == RightButtonAction.CONTINUE) {
+                    mViewMessage.setText(R.string.pattern_change_head);
+                } else {
+                    mViewMessage.setText(R.string.pattern_change_confirm);
+                }
+            }
+        }
     }
 }

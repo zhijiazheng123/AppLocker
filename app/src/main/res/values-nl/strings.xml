@@ -35,8 +35,10 @@
 
     <!-- BEGIN v1.08 Strings -->
     <!-- This section represents Locker > Preferences -->
-    <string name="preferences_tit">Instellingen</string> <!-- The window title -->
-    <string name="main_preferences">Instellingen</string> <!-- The button in the main screen -->
+    <string name="preferences_tit">Instellingen</string>
+    <!-- The window title -->
+    <string name="main_preferences">Instellingen</string>
+    <!-- The button in the main screen -->
     <!-- clone of "locker_footer_default" -->
     <string name="pref_def_lock_message">Voer het wachtwoord in om te ontgrendelen</string>
     <string name="pref_tit_lock_message">Bericht</string>

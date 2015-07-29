@@ -4,12 +4,12 @@ import android.content.Context;
 import android.view.View;
 
 public class BannerHelper extends BaseBannerHelper {
+    public BannerHelper(Context c, View parent) {
+    }
+
     @Override
     public String getAdUnitId() {
         return null;
-    }
-
-    public BannerHelper(Context c, View parent) {
     }
 
     public boolean shouldShowAds() {

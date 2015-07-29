@@ -34,8 +34,10 @@
 
     <!-- BEGIN v1.08 Strings -->
     <!-- This section represents Locker > Preferences -->
-    <string name="preferences_tit">Ajustes</string> <!-- The window title -->
-    <string name="main_preferences">Ajustes</string> <!-- The button in the main screen -->
+    <string name="preferences_tit">Ajustes</string>
+    <!-- The window title -->
+    <string name="main_preferences">Ajustes</string>
+    <!-- The button in the main screen -->
     <!-- clone of "locker_footer_default" -->
     <string name="pref_def_lock_message">Introduce la contraseña para desbloquear</string>
     <string name="pref_tit_lock_message">Mensaje</string>
@@ -175,7 +177,8 @@
     <string name="pref_desc_dial_launch">Acceder a Locker llamando a un número.</string>
     <string name="pref_tit_dial_launch_number">Número</string>
     <string name="pref_desc_dial_launch_number">Cuando llamas a este número, Locker se abrirá. (Recomendamos que empieze por #)</string>
-    <string name="vc_later">Más tarde</string> <!-- END v2.0.8 Strings -->
+    <string name="vc_later">Más tarde</string>
+    <!-- END v2.0.8 Strings -->
 
 
     <!-- END v2.0.8 Strings -->
@@ -334,9 +337,9 @@
     <!-- May be used for twitter -->
     <string name="share_promo_text">Echa un vistazo a Twinone App Locker, la app gratuita que protege tu privacidad y aplicaciones. https://play.google.com/store/apps/details?id=com.twinone.locker</string>
 
-        <!-- BEGIN v2335 -->
+    <!-- BEGIN v2335 -->
     <string name="share_dlg_never">Nunca</string>
     <string name="share_dlg_later">Más tarde</string>
-    
-    
+
+
 </resources>

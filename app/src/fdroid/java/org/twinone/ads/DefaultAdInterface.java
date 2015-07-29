@@ -1,9 +1,5 @@
 package org.twinone.ads;
 
-import org.twinone.ads.BaseAdDetails;
-
-import java.lang.Override;
-
 public class DefaultAdInterface extends BaseAdDetails {
 
     @Override

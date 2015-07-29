@@ -11,7 +11,7 @@
     numlock:maxVScale="1.2"
     numlock:maxWidth="400dp"
     numlock:rows="4"
-    numlock:verticalSpacing="7dp" >
+    numlock:verticalSpacing="7dp">
 
     <Button
         android:id="@+id/numlock_b1"
