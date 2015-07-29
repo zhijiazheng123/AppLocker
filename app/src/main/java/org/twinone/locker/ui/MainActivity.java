@@ -1,6 +1,5 @@
 package org.twinone.locker.ui;
 
-import android.app.Activity;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -26,15 +25,14 @@ import com.twinone.locker.R;
 
 import org.twinone.locker.lock.AppLockService;
 import org.twinone.locker.lock.LockService;
+import org.twinone.locker.ui.dialogs.ChoosePasswordDialog;
 import org.twinone.locker.util.PrefUtils;
-import org.twinone.util.DialogSequencer;
 
 public class MainActivity extends AppCompatActivity implements
         NavigationView.OnNavigationItemSelectedListener, View.OnClickListener {
 
     private static final String EXTRA_UNLOCKED = "com.twinone.locker.unlocked";
 
-    private DialogSequencer mSequencer;
     private Fragment mCurrentFragment;
 //	/**
 //	 * Fragment managing the behaviors, interactions and presentation of the
@@ -67,7 +65,8 @@ public class MainActivity extends AppCompatActivity implements
                     navigateToFragment(new AppsFragment());
                     break;
                 case R.id.nav_change:
-                    Dialogs.getChangePasswordDialog(this).show();
+                    Log.d("ShowPass", "from navigation");
+                    new ChoosePasswordDialog().show(getSupportFragmentManager(), "show_password_dialog");
                     // Don't close drawer here, and don't select the menu item
                     return false;
                 case R.id.nav_settings:
@@ -91,8 +90,9 @@ public class MainActivity extends AppCompatActivity implements
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.lock_state_image:
-                dismissLockInfoMessage();
-                toggleService();
+                if (toggleService()) {
+                    dismissLockInfoMessage();
+                }
                 break;
         }
     }
@@ -149,8 +149,8 @@ public class MainActivity extends AppCompatActivity implements
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.container, mCurrentFragment).commit();
 
-        mSequencer = new DialogSequencer();
-        showDialogs();
+
+        setupPassword();
         showLockerIfNotUnlocked(false);
 
     }
@@ -168,7 +168,6 @@ public class MainActivity extends AppCompatActivity implements
         super.onPause();
         LockService.hide(this);
         unregisterReceiver(mReceiver);
-        mSequencer.stop();
 
         // We have to finish here or the system will assign a lower priority to
         // the app (since 4.4?)
@@ -198,43 +197,10 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.global, menu);
         return true;
     }
 
-    /**
-     * Provide a way back to {@link MainActivity} without having to provide a
-     * password again. It finishes the calling {@link Activity}
-     *
-     * @param context
-     */
-    public static void showWithoutPassword(Context context) {
-        Intent i = new Intent(context, MainActivity.class);
-        i.putExtra(EXTRA_UNLOCKED, true);
-        if (!(context instanceof Activity)) {
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        }
-        context.startActivity(i);
-    }
-
-
-    /**
-     * @return True if the service is allowed to start
-     */
-    private boolean showDialogs() {
-        boolean deny = false;
-
-        // Recovery code
-        mSequencer.addDialog(Dialogs.getRecoveryCodeDialog(this));
-
-        // Empty password
-        deny = Dialogs.addEmptyPasswordDialog(this, mSequencer);
-
-        mSequencer.start();
-        return !deny;
-    }
 
     private void showLockerIfNotUnlocked(boolean relock) {
         boolean unlocked = getIntent().getBooleanExtra(EXTRA_UNLOCKED, false);
@@ -271,18 +237,34 @@ public class MainActivity extends AppCompatActivity implements
 
     }
 
-
-    private void toggleService() {
-        boolean on = false;
+    private boolean toggleService() {
         if (AppLockService.isRunning(this)) {
-            Log.d("", "toggleService() Service is running, now stopping");
             AppLockService.stop(this);
-        } else if (Dialogs.addEmptyPasswordDialog(this, mSequencer)) {
-            mSequencer.start();
-        } else {
-            on = true;
+            return false;
+        } else if (setupPassword()) {
             AppLockService.start(this);
+            return true;
+        } else {
+            return false;
         }
+    }
+
+    /**
+     * Ask the user to setup his password
+     *
+     * @return True if there's already a password setup, false if the password is about to be created
+     */
+    boolean setupPassword() {
+        if (!new PrefUtils(this).isCurrentPasswordEmpty())
+            return true;
+        try {
+            throw new RuntimeException("");
+        } catch(Exception e) {
+            Log.d("ShowPass", "from setup: ", e);
+        }
+
+        new ChoosePasswordDialog().show(getSupportFragmentManager(), "show_password_dialog");
+        return false;
     }
 
 
