@@ -1,8 +1,8 @@
 package org.twinone.locker.ui;
 
+import org.twinone.locker.Constants;
 import org.twinone.locker.lock.AppLockService;
 import org.twinone.locker.lock.LockService;
-import org.twinone.locker.ui.NavigationFragment.NavigationListener;
 import org.twinone.locker.util.PrefUtils;
 import org.twinone.util.DialogSequencer;
 
@@ -15,19 +15,24 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.CompoundButton;
 
 import com.twinone.locker.R;
 
-public class MainActivity extends ActionBarActivity implements
-		NavigationListener {
-
+public class MainActivity extends ActionBarActivity {
+    private static final String TAG = "AppLocker";
 //	private static final String VERSION_URL_PRD = "https://twinone.org/apps/locker/update.php";
 //	private static final String VERSION_URL_DBG = "https://twinone.org/apps/locker/dbg-update.php";
 //	public static final String VERSION_URL = Constants.DEBUG ? VERSION_URL_DBG
@@ -40,7 +45,6 @@ public class MainActivity extends ActionBarActivity implements
 	 * Fragment managing the behaviors, interactions and presentation of the
 	 * navigation drawer.
 	 */
-	private NavigationFragment mNavFragment;
 
 	/**
 	 * Used to store the last screen title. For use in
@@ -51,6 +55,7 @@ public class MainActivity extends ActionBarActivity implements
 	private ActionBar mActionBar;
 	private BroadcastReceiver mReceiver;
 	private IntentFilter mFilter;
+    private DrawerLayout mDrawerLayout;
 
 	private class ServiceStateReceiver extends BroadcastReceiver {
 		@Override
@@ -73,14 +78,10 @@ public class MainActivity extends ActionBarActivity implements
 		mFilter.addAction(AppLockService.BROADCAST_SERVICE_STARTED);
 		mFilter.addAction(AppLockService.BROADCAST_SERVICE_STOPPED);
 
-		mNavFragment = (NavigationFragment) getSupportFragmentManager()
-				.findFragmentById(R.id.navigation_drawer);
-		// Set up the drawer.
-		mNavFragment.setUp(R.id.navigation_drawer,
-				(DrawerLayout) findViewById(R.id.drawer_layout));
 		mTitle = getTitle();
 
-		mActionBar = getSupportActionBar();
+        setupDrawer();
+        mActionBar = getSupportActionBar();
 		mCurrentFragment = new AppsFragment();
 		getSupportFragmentManager().beginTransaction()
 				.add(R.id.container, mCurrentFragment).commit();
@@ -92,7 +93,90 @@ public class MainActivity extends ActionBarActivity implements
 
 	}
 
-	@Override
+    protected void setupDrawer() {
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        toolbar.setNavigationIcon(R.drawable.ic_drawer);
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDrawerLayout.openDrawer(Gravity.LEFT);
+            }
+        });
+        mDrawerLayout.setDrawerListener(new DrawerLayout.SimpleDrawerListener() {
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                super.onDrawerClosed(drawerView);
+                MainActivity.this.onDrawerClosed();
+            }
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                MainActivity.this.onDrawerOpened();
+            }
+        });
+        final NavigationView navigationView = (NavigationView) findViewById(R.id.vNavigation);
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(MenuItem menuItem) {
+                mDrawerLayout.closeDrawer(Gravity.LEFT);
+                switch (menuItem.getItemId()) {
+                    case R.id.menu_apps:
+                        navigateToFragment(NavigationElement.TYPE_APPS);
+                        menuItem.setChecked(true);
+                        return true;
+                    case R.id.menu_change:
+                        navigateToFragment(NavigationElement.TYPE_CHANGE);
+                        return true;
+                    case R.id.menu_settings:
+                        navigateToFragment(NavigationElement.TYPE_SETTINGS);
+                        menuItem.setChecked(true);
+                        return true;
+                    case R.id.menu_statistics:
+                        navigateToFragment(NavigationElement.TYPE_STATISTICS);
+                        menuItem.setChecked(true);
+                        return true;
+                    case R.id.menu_test:
+                        onNavigationElementSelected(NavigationElement.TYPE_TEST);
+                        return true;
+                    case R.id.menu_share:
+                        onShareButton();
+                        return true;
+                    case R.id.menu_rate:
+                        onRateButton();
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+        });
+        if (Constants.DEBUG) {
+            navigationView.getMenu().findItem(R.id.menu_statistics).setVisible(true);
+            navigationView.getMenu().findItem(R.id.menu_test).setVisible(true);
+        }
+
+        final View.OnClickListener statusClickedListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onNavigationElementSelected(NavigationElement.TYPE_STATUS);
+            }
+        };
+        findViewById(R.id.headerRoot).setOnClickListener(statusClickedListener);
+        findViewById(R.id.navFlag).setOnClickListener(statusClickedListener);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (mDrawerLayout.isDrawerOpen(Gravity.LEFT)) {
+            mDrawerLayout.closeDrawer(Gravity.LEFT);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
 	protected void onResume() {
 		super.onResume();
 		Log.d("Main", "onResume");
@@ -197,8 +281,8 @@ public class MainActivity extends ActionBarActivity implements
 		Log.d("Main",
 				"UPDATE LAYOUT Setting service state: "
 						+ AppLockService.isRunning(this));
-		mNavFragment.getAdapter().setServiceState(
-				AppLockService.isRunning(this));
+        final CompoundButton cb = (CompoundButton) findViewById(R.id.navFlag);
+        cb.setChecked(AppLockService.isRunning(this));
 	}
 
 	/**
@@ -223,7 +307,6 @@ public class MainActivity extends ActionBarActivity implements
 	private int mCurrentFragmentType;
 	private int mNavPendingType = -1;
 
-	@Override
 	public boolean onNavigationElementSelected(int type) {
 		if (type == NavigationElement.TYPE_TEST) {
 			// Test something here
@@ -240,23 +323,23 @@ public class MainActivity extends ActionBarActivity implements
 	private void toggleService() {
 		boolean newState = false;
 		if (AppLockService.isRunning(this)) {
-			Log.d("", "toggleService() Service is running, now stopping");
+			Log.d(TAG, "toggleService() Service is running, now stopping");
 			AppLockService.stop(this);
 		} else if (Dialogs.addEmptyPasswordDialog(this, mSequencer)) {
+            Log.d(TAG, "mSequencer starting");
 			mSequencer.start();
 		} else {
 			newState = AppLockService.toggle(this);
+            Log.d(TAG, "toggleService() Service is stopped, now running:" + newState);
 		}
-		if (mNavFragment != null)
-			mNavFragment.getAdapter().setServiceState(newState);
+        final CompoundButton cb = (CompoundButton) findViewById(R.id.navFlag);
+        cb.setChecked(newState);
 	}
 
-	@Override
 	public void onDrawerOpened() {
 		getSupportActionBar().setTitle(mTitle);
 	}
 
-	@Override
 	public void onDrawerClosed() {
 		getSupportActionBar().setTitle(mTitle);
 		if (mNavPending) {
@@ -298,13 +381,11 @@ public class MainActivity extends ActionBarActivity implements
 		mCurrentFragmentType = type;
 	}
 
-	@Override
 	public void onShareButton() {
 		// Don't add never button, the user wanted to share
 		Dialogs.getShareEditDialog(this, false).show();
 	}
 
-	@Override
 	public void onRateButton() {
 		toGooglePlay();
 	}
