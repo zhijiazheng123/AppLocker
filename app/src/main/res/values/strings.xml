@@ -351,7 +351,9 @@
     <string name="lib_share_later">Later</string>
     <string name="undo">Undo</string>
 
-    <string name="main_nav_locked">AppLocker is running</string>
-    <string name="main_nav_unlocked">AppLocker is not running</string>
+    <string name="main_nav_locked">App Locker is running</string>
+    <string name="main_nav_unlocked">App Locker is not running</string>
+    <!--Keep this string short! -->
+    <string name="main_nav_onetime_info">Touch the lock icon below to toggle</string>
 
 </resources>

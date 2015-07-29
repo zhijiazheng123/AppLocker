@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements
     private DrawerLayout mDrawerLayout;
     private ImageView mLockStateImage;
     private TextView mLockStateDesc;
+    private TextView mLockStateInfoMessage;
     private int mNavSelected = R.id.nav_apps; // 0 is an invalid resId
 
     @Override
@@ -90,9 +91,15 @@ public class MainActivity extends AppCompatActivity implements
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.lock_state_image:
+                dismissLockInfoMessage();
                 toggleService();
                 break;
         }
+    }
+
+    void dismissLockInfoMessage() {
+        mLockStateInfoMessage.setVisibility(View.GONE);
+        getPreferences(MODE_PRIVATE).edit().putBoolean("main_nav_info_onetime_learned", true).apply();
     }
 
     private class ServiceStateReceiver extends BroadcastReceiver {
@@ -124,6 +131,10 @@ public class MainActivity extends AppCompatActivity implements
         mLockStateImage = (ImageView) mNavView.findViewById(R.id.lock_state_image);
         mLockStateDesc = (TextView) mNavView.findViewById(R.id.lock_state_desc);
 
+        mLockStateInfoMessage = (TextView) mNavView.findViewById(R.id.lock_state_info_message);
+        if (getPreferences(MODE_PRIVATE).getBoolean("main_nav_info_onetime_learned", false)) {
+            mLockStateInfoMessage.setVisibility(View.GONE);
+        }
         mLockStateImage.setOnClickListener(this);
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);

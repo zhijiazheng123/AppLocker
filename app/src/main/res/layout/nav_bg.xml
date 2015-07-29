@@ -37,13 +37,27 @@
         android:id="@+id/lock_state_desc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/username"
+        android:layout_alignLeft="@id/username"
         android:layout_alignParentBottom="true"
-        android:layout_alignStart="@+id/username"
-        android:layout_marginBottom="8dp"
+        android:layout_alignStart="@id/username"
         android:gravity="start"
-        android:text="AppLocker is running"
         android:textColor="#fff"
+        android:layout_marginBottom="8dp"
         android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/lock_state_info_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@id/username"
+        android:layout_marginTop="30dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignStart="@id/username"
+        android:gravity="start"
+        android:text="@string/main_nav_onetime_info"
+        android:textColor="#fff"
+        android:textSize="12sp" />
+
+
 
 </RelativeLayout>
