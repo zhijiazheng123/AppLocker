@@ -4,19 +4,19 @@
         Base application theme, dependent on API level. This theme is replaced
         by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
     -->
-    <style name="AppBaseTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!--
-            Theme customizations available in newer API levels can go in
-            res/values-vXX/styles.xml, while customizations related to
-            backward-compatibility can go here.
-        -->
-        <item name="colorPrimary">#259b24</item>
-        <item name="colorPrimaryDark">#0a7e07</item>
-        <item name="colorAccent">#ffa000</item>
+    <style name="AppBaseTheme" parent="Theme.AppCompat.Light">
+
     </style>
     <!-- Application theme. -->
     <style name="AppTheme" parent="AppBaseTheme">
         <item name="android:buttonStyle">@style/Theme_Button</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+
+        <item name="colorPrimary">@color/material_indigo_500</item>
+        <item name="colorPrimaryDark">@color/material_indigo_700</item>
+        <item name="colorAccent">@color/material_teal_700</item>
+        <item name="actionBarStyle">@style/ThemeOverlay.AppCompat</item>
     </style>
 
     <style name="LockActivityTheme" parent="AppBaseTheme">

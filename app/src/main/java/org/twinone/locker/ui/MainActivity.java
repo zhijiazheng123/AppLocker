@@ -1,11 +1,5 @@
 package org.twinone.locker.ui;
 
-import org.twinone.locker.lock.AppLockService;
-import org.twinone.locker.lock.LockService;
-import org.twinone.locker.ui.NavigationFragment.NavigationListener;
-import org.twinone.locker.util.PrefUtils;
-import org.twinone.util.DialogSequencer;
-
 import android.app.Activity;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
@@ -15,306 +9,289 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.twinone.locker.R;
 
-public class MainActivity extends ActionBarActivity implements
-		NavigationListener {
+import org.twinone.locker.lock.AppLockService;
+import org.twinone.locker.lock.LockService;
+import org.twinone.locker.util.PrefUtils;
+import org.twinone.util.DialogSequencer;
 
-//	private static final String VERSION_URL_PRD = "https://twinone.org/apps/locker/update.php";
-//	private static final String VERSION_URL_DBG = "https://twinone.org/apps/locker/dbg-update.php";
-//	public static final String VERSION_URL = Constants.DEBUG ? VERSION_URL_DBG
-//			: VERSION_URL_PRD;
-	private static final String EXTRA_UNLOCKED = "com.twinone.locker.unlocked";
+public class MainActivity extends AppCompatActivity implements
+        NavigationView.OnNavigationItemSelectedListener, View.OnClickListener {
 
-	private DialogSequencer mSequencer;
-	private Fragment mCurrentFragment;
-	/**
-	 * Fragment managing the behaviors, interactions and presentation of the
-	 * navigation drawer.
-	 */
-	private NavigationFragment mNavFragment;
+    private static final String EXTRA_UNLOCKED = "com.twinone.locker.unlocked";
 
-	/**
-	 * Used to store the last screen title. For use in
-	 * .
-	 */
-	private CharSequence mTitle;
+    private DialogSequencer mSequencer;
+    private Fragment mCurrentFragment;
+//	/**
+//	 * Fragment managing the behaviors, interactions and presentation of the
+//	 * navigation drawer.
+//	 */
+//	private NavigationFragment mNavFragment;
 
-	private ActionBar mActionBar;
-	private BroadcastReceiver mReceiver;
-	private IntentFilter mFilter;
+    /**
+     * Used to store the last screen title. For use in
+     * .
+     */
+    private CharSequence mTitle;
 
-	private class ServiceStateReceiver extends BroadcastReceiver {
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			Log.d("MainACtivity",
-					"Received broadcast (action=" + intent.getAction());
-			updateLayout();
-		}
-	}
+    private Toolbar mToolbar;
+    private BroadcastReceiver mReceiver;
+    private IntentFilter mFilter;
+    private NavigationView mNavView;
+    private DrawerLayout mDrawerLayout;
+    private ImageView mLockStateImage;
+    private TextView mLockStateDesc;
+    private TextView mLockStateInfoMessage;
+    private int mNavSelected = R.id.nav_apps; // 0 is an invalid resId
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
-		handleIntent();
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id != mNavSelected) {
+            switch (id) {
+                case R.id.nav_apps:
+                    navigateToFragment(new AppsFragment());
+                    break;
+                case R.id.nav_change:
+                    Dialogs.getChangePasswordDialog(this).show();
+                    // Don't close drawer here, and don't select the menu item
+                    return false;
+                case R.id.nav_settings:
+                    navigateToFragment(new SettingsFragment());
+                    break;
 
-		mReceiver = new ServiceStateReceiver();
-		mFilter = new IntentFilter();
-		mFilter.addCategory(AppLockService.CATEGORY_STATE_EVENTS);
-		mFilter.addAction(AppLockService.BROADCAST_SERVICE_STARTED);
-		mFilter.addAction(AppLockService.BROADCAST_SERVICE_STOPPED);
+            }
+        }
 
-		mNavFragment = (NavigationFragment) getSupportFragmentManager()
-				.findFragmentById(R.id.navigation_drawer);
-		// Set up the drawer.
-		mNavFragment.setUp(R.id.navigation_drawer,
-				(DrawerLayout) findViewById(R.id.drawer_layout));
-		mTitle = getTitle();
+        mNavSelected = id;
+        mDrawerLayout.closeDrawers();
+        item.setChecked(true);
+        return true;
+    }
 
-		mActionBar = getSupportActionBar();
-		mCurrentFragment = new AppsFragment();
-		getSupportFragmentManager().beginTransaction()
-				.add(R.id.container, mCurrentFragment).commit();
-		mCurrentFragmentType = NavigationElement.TYPE_APPS;
+    private void navigateToFragment(Fragment f) {
+        getSupportFragmentManager().beginTransaction().replace(R.id.container, f).commit();
+    }
 
-		mSequencer = new DialogSequencer();
-		showDialogs();
-		showLockerIfNotUnlocked(false);
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.lock_state_image:
+                dismissLockInfoMessage();
+                toggleService();
+                break;
+        }
+    }
 
-	}
+    void dismissLockInfoMessage() {
+        mLockStateInfoMessage.setVisibility(View.GONE);
+        getPreferences(MODE_PRIVATE).edit().putBoolean("main_nav_info_onetime_learned", true).apply();
+    }
 
-	@Override
-	protected void onResume() {
-		super.onResume();
-		Log.d("Main", "onResume");
-		showLockerIfNotUnlocked(true);
-		registerReceiver(mReceiver, mFilter);
-		updateLayout();
-	}
+    private class ServiceStateReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            updateLayout();
+        }
+    }
 
-	@Override
-	protected void onPause() {
-		super.onPause();
-		// mSequencer.stop();
-		LockService.hide(this);
-		unregisterReceiver(mReceiver);
-		mSequencer.stop();
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        handleIntent();
 
-		// We have to finish here or the system will assign a lower priority to
-		// the app (since 4.4?)
-		if (mCurrentFragmentType != NavigationElement.TYPE_SETTINGS) {
-			finish();
-		}
-	}
+        mReceiver = new ServiceStateReceiver();
+        mFilter = new IntentFilter();
+        mFilter.addCategory(AppLockService.CATEGORY_STATE_EVENTS);
+        mFilter.addAction(AppLockService.BROADCAST_SERVICE_STARTED);
+        mFilter.addAction(AppLockService.BROADCAST_SERVICE_STOPPED);
 
-	@Override
-	protected void onDestroy() {
-		Log.v("Main", "onDestroy");
-		super.onDestroy();
-	}
+        mTitle = getTitle();
 
-	@Override
-	protected void onNewIntent(Intent intent) {
-		Log.d("", "onNewIntent");
-		super.onNewIntent(intent);
-		setIntent(intent);
-		handleIntent();
-	}
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
 
-	@Override
-	public void setTitle(CharSequence title) {
-		super.setTitle(title);
-		mTitle = title;
-		getSupportActionBar().setTitle(title);
-	}
+        mNavView = (NavigationView) findViewById(R.id.navView);
+        mNavView.setNavigationItemSelectedListener(this);
+        mLockStateImage = (ImageView) mNavView.findViewById(R.id.lock_state_image);
+        mLockStateDesc = (TextView) mNavView.findViewById(R.id.lock_state_desc);
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
+        mLockStateInfoMessage = (TextView) mNavView.findViewById(R.id.lock_state_info_message);
+        if (getPreferences(MODE_PRIVATE).getBoolean("main_nav_info_onetime_learned", false)) {
+            mLockStateInfoMessage.setVisibility(View.GONE);
+        }
+        mLockStateImage.setOnClickListener(this);
 
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.global, menu);
-		return true;
-	}
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle dt = new ActionBarDrawerToggle(
+                this, mDrawerLayout, mToolbar,
+                0, 0
+        );
+        mDrawerLayout.setDrawerListener(dt);
+        dt.syncState();
 
-	/**
-	 * Provide a way back to {@link MainActivity} without having to provide a
-	 * password again. It finishes the calling {@link Activity}
-	 * 
-	 * @param context
-	 */
-	public static void showWithoutPassword(Context context) {
-		Intent i = new Intent(context, MainActivity.class);
-		i.putExtra(EXTRA_UNLOCKED, true);
-		if (!(context instanceof Activity)) {
-			i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		}
-		context.startActivity(i);
-	}
+        mCurrentFragment = new AppsFragment();
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.container, mCurrentFragment).commit();
 
-	public void setActionBarTitle(int resId) {
-		mActionBar.setTitle(resId);
-	}
+        mSequencer = new DialogSequencer();
+        showDialogs();
+        showLockerIfNotUnlocked(false);
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        showLockerIfNotUnlocked(true);
+        registerReceiver(mReceiver, mFilter);
+        updateLayout();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        LockService.hide(this);
+        unregisterReceiver(mReceiver);
+        mSequencer.stop();
+
+        // We have to finish here or the system will assign a lower priority to
+        // the app (since 4.4?)
+        finish();
+    }
+
+    @Override
+    protected void onDestroy() {
+        Log.v("Main", "onDestroy");
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        Log.d("", "onNewIntent");
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleIntent();
+    }
+
+    @Override
+    public void setTitle(CharSequence title) {
+        super.setTitle(title);
+        mTitle = title;
+        getSupportActionBar().setTitle(title);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.global, menu);
+        return true;
+    }
+
+    /**
+     * Provide a way back to {@link MainActivity} without having to provide a
+     * password again. It finishes the calling {@link Activity}
+     *
+     * @param context
+     */
+    public static void showWithoutPassword(Context context) {
+        Intent i = new Intent(context, MainActivity.class);
+        i.putExtra(EXTRA_UNLOCKED, true);
+        if (!(context instanceof Activity)) {
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        }
+        context.startActivity(i);
+    }
 
 
-	/**
-	 * 
-	 * @return True if the service is allowed to start
-	 */
-	private boolean showDialogs() {
-		boolean deny = false;
+    /**
+     * @return True if the service is allowed to start
+     */
+    private boolean showDialogs() {
+        boolean deny = false;
 
-		// Recovery code
-		mSequencer.addDialog(Dialogs.getRecoveryCodeDialog(this));
+        // Recovery code
+        mSequencer.addDialog(Dialogs.getRecoveryCodeDialog(this));
 
-		// Empty password
-		deny = Dialogs.addEmptyPasswordDialog(this, mSequencer);
+        // Empty password
+        deny = Dialogs.addEmptyPasswordDialog(this, mSequencer);
 
-		mSequencer.start();
-		return !deny;
-	}
+        mSequencer.start();
+        return !deny;
+    }
 
-	private void showLockerIfNotUnlocked(boolean relock) {
-		boolean unlocked = getIntent().getBooleanExtra(EXTRA_UNLOCKED, false);
-		if (new PrefUtils(this).isCurrentPasswordEmpty()) {
-			unlocked = true;
-		}
-		if (!unlocked) {
-			LockService.showCompare(this, getPackageName());
-		}
-		getIntent().putExtra(EXTRA_UNLOCKED, !relock);
-	}
+    private void showLockerIfNotUnlocked(boolean relock) {
+        boolean unlocked = getIntent().getBooleanExtra(EXTRA_UNLOCKED, false);
+        if (new PrefUtils(this).isCurrentPasswordEmpty()) {
+            unlocked = true;
+        }
+        if (!unlocked) {
+            LockService.showCompare(this, getPackageName());
+        }
+        getIntent().putExtra(EXTRA_UNLOCKED, !relock);
+    }
 
-	private void updateLayout() {
-		Log.d("Main",
-				"UPDATE LAYOUT Setting service state: "
-						+ AppLockService.isRunning(this));
-		mNavFragment.getAdapter().setServiceState(
-				AppLockService.isRunning(this));
-	}
+    private void updateLayout() {
+        boolean on = AppLockService.isRunning(this);
+        mLockStateImage.setImageDrawable(getResources().getDrawable(on
+                ? R.drawable.lock_hole
+                : R.drawable.lock_open_hole));
+        mLockStateDesc.setText(getString(on ? R.string.main_nav_locked : R.string.main_nav_unlocked));
+    }
 
-	/**
-	 * Handle this Intent for searching...
-	 */
-	private void handleIntent() {
-		if (getIntent() != null && getIntent().getAction() != null) {
-			if (getIntent().getAction().equals(Intent.ACTION_SEARCH)) {
-				Log.d("MainActivity", "Action search!");
-				if (mCurrentFragmentType == NavigationElement.TYPE_APPS) {
-					final String query = getIntent().getStringExtra(
-							SearchManager.QUERY);
-					if (query != null) {
-						((AppsFragment) mCurrentFragment).onSearch(query);
-					}
-				}
-			}
-		}
-	}
+    /**
+     * Handle this Intent for searching...
+     */
+    private void handleIntent() {
+        if (getIntent() != null && getIntent().getAction() != null) {
+            if (getIntent().getAction().equals(Intent.ACTION_SEARCH) && mCurrentFragment instanceof AppsFragment) {
+                final String query = getIntent().getStringExtra(
+                        SearchManager.QUERY);
+                if (query != null) {
+                    ((AppsFragment) mCurrentFragment).onSearch(query);
+                }
+            }
+        }
 
-	private boolean mNavPending;
-	private int mCurrentFragmentType;
-	private int mNavPendingType = -1;
+    }
 
-	@Override
-	public boolean onNavigationElementSelected(int type) {
-		if (type == NavigationElement.TYPE_TEST) {
-			// Test something here
-			return false;
-		} else if (type == NavigationElement.TYPE_STATUS) {
-			toggleService();
-			return false;
-		}
-		mNavPending = true;
-		mNavPendingType = type;
-		return true;
-	}
 
-	private void toggleService() {
-		boolean newState = false;
-		if (AppLockService.isRunning(this)) {
-			Log.d("", "toggleService() Service is running, now stopping");
-			AppLockService.stop(this);
-		} else if (Dialogs.addEmptyPasswordDialog(this, mSequencer)) {
-			mSequencer.start();
-		} else {
-			newState = AppLockService.toggle(this);
-		}
-		if (mNavFragment != null)
-			mNavFragment.getAdapter().setServiceState(newState);
-	}
+    private void toggleService() {
+        boolean on = false;
+        if (AppLockService.isRunning(this)) {
+            Log.d("", "toggleService() Service is running, now stopping");
+            AppLockService.stop(this);
+        } else if (Dialogs.addEmptyPasswordDialog(this, mSequencer)) {
+            mSequencer.start();
+        } else {
+            on = true;
+            AppLockService.start(this);
+        }
+    }
 
-	@Override
-	public void onDrawerOpened() {
-		getSupportActionBar().setTitle(mTitle);
-	}
 
-	@Override
-	public void onDrawerClosed() {
-		getSupportActionBar().setTitle(mTitle);
-		if (mNavPending) {
-			navigateToFragment(mNavPendingType);
-			mNavPending = false;
-		}
-	}
-
-	/**
-	 * Open a specific Fragment
-	 * 
-	 * @param type
-	 */
-    void navigateToFragment(int type) {
-		if (type == mCurrentFragmentType) {
-			// Don't duplicate
-			return;
-		}
-		if (type == NavigationElement.TYPE_CHANGE) {
-			Dialogs.getChangePasswordDialog(this).show();
-			// Don't change current fragment type
-			return;
-		}
-
-		switch (type) {
-		case NavigationElement.TYPE_APPS:
-			mCurrentFragment = new AppsFragment();
-			break;
-		case NavigationElement.TYPE_SETTINGS:
-			mCurrentFragment = new SettingsFragment();
-			break;
-		case NavigationElement.TYPE_STATISTICS:
-			mCurrentFragment = new StatisticsFragment();
-			break;
-		}
-		FragmentManager fm = getSupportFragmentManager();
-		fm.beginTransaction().replace(R.id.container, mCurrentFragment)
-				.commit();
-		mCurrentFragmentType = type;
-	}
-
-	@Override
-	public void onShareButton() {
-		// Don't add never button, the user wanted to share
-		Dialogs.getShareEditDialog(this, false).show();
-	}
-
-	@Override
-	public void onRateButton() {
-		toGooglePlay();
-	}
-
-	private void toGooglePlay() {
-		Intent intent = new Intent(Intent.ACTION_VIEW);
-		intent.setData(Uri.parse("market://details?id=" + getPackageName()));
-		if (getPackageManager().queryIntentActivities(intent,
-				PackageManager.MATCH_DEFAULT_ONLY).size() >= 1) {
-			startActivity(intent);
-		}
-	}
+    private void toGooglePlay() {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(Uri.parse("market://details?id=" + getPackageName()));
+        if (getPackageManager().queryIntentActivities(intent,
+                PackageManager.MATCH_DEFAULT_ONLY).size() >= 1) {
+            startActivity(intent);
+        }
+    }
 }
